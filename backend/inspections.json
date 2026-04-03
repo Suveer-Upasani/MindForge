@@ -1,5 +1,38 @@
 [
     {
+        "id": "INS-7860",
+        "templateName": "tpl_1775235035",
+        "category": "Detection",
+        "timestamp": "2026-04-04T00:45:19.626300",
+        "status": "fail",
+        "anomalyScore": 71.33,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-4585",
+        "templateName": "tpl_1775235035",
+        "category": "Detection",
+        "timestamp": "2026-04-04T00:41:54.722706",
+        "status": "fail",
+        "anomalyScore": 83.27,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-3645",
+        "templateName": "tpl_1775235035",
+        "category": "Detection",
+        "timestamp": "2026-04-04T00:40:10.449210",
+        "status": "fail",
+        "anomalyScore": 92.3,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
         "id": "INS-4867",
         "templateName": "tpl_1775235035",
         "category": "Detection",
