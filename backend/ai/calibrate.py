@@ -40,9 +40,10 @@ def calibrate_product(product_id: str, image_folder_path: str):
     I = np.identity(C)
     for i in range(H * W):
         patch_features = features_flat[:, :, i] # (N, C)
-        cov_matrix = np.cov(patch_features, rowvar=False) # (C, C)
+        # Use ddof=0 if N=1 to prevent NaN from division by zero
+        cov_matrix = np.cov(patch_features, rowvar=False, ddof=0 if N == 1 else 1) 
         # Add regularization term to make it invertible
-        cov[:, :, i] = cov_matrix + 0.01 * I
+        cov[:, :, i] = np.nan_to_num(cov_matrix) + 0.01 * I
         
     # Save model
     model_data = {

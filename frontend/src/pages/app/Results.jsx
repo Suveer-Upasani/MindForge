@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInspection } from '../../context/InspectionContext';
 import { Card } from '../../components/ui/Card';
@@ -11,10 +12,22 @@ import {
   RefreshCw, 
   FileText 
 } from 'lucide-react';
+import { api } from '../../services/api';
 
 export default function Results() {
   const navigate = useNavigate();
   const { currentResult } = useInspection();
+  const [stats, setStats] = useState({ total_scanned: 0, total_approved: 0, total_defective: 0 });
+
+  useEffect(() => {
+    if (currentResult && currentResult.templateId) {
+      api.getStats(currentResult.templateId).then(data => {
+        setStats(data);
+      }).catch(err => {
+        console.error('Failed to load stats:', err);
+      });
+    }
+  }, [currentResult]);
 
   if (!currentResult) {
     return (
@@ -69,9 +82,9 @@ export default function Results() {
               <div className="aspect-video relative group bg-gray-100">
                 {currentResult.serverRef ? (
                    <img 
-                      src={`http://localhost:5005/uploads/${currentResult.serverRef}`} 
+                      src={currentResult.serverRef.startsWith('data:image') || currentResult.serverRef.startsWith('http') ? currentResult.serverRef : `http://localhost:5000/uploads/${currentResult.serverRef}`}
                       alt="Sample Analysis" 
-                      className="w-full h-full object-contain p-4 transition-transform duration-700" 
+                      className="w-full h-full object-contain p-4 transition-transform duration-700"
                    />
                 ) : (
                    <div className="absolute inset-0 flex items-center justify-center">
@@ -136,15 +149,15 @@ export default function Results() {
                  <div className="space-y-4 text-sm">
                     <div className="flex justify-between border-b border-gray-50 pb-2">
                        <span className="text-gray-500">Total Scanned Today</span>
-                       <span className="text-gray-900 font-bold">142</span>
+                       <span className="text-gray-900 font-bold">{stats.total_scanned}</span>
                     </div>
                     <div className="flex justify-between border-b border-gray-50 pb-2">
                        <span className="text-gray-500">Total Approved</span>
-                       <span className="text-green-600 font-bold">135</span>
+                       <span className="text-green-600 font-bold">{stats.total_approved}</span>
                     </div>
                     <div className="flex justify-between border-b border-gray-50 pb-2">
                        <span className="text-gray-500">Total Defective</span>
-                       <span className="text-red-600 font-bold">7</span>
+                       <span className="text-red-600 font-bold">{stats.total_defective}</span>
                     </div>
                  </div>
               </Card>

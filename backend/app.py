@@ -1,8 +1,14 @@
 import os
+import json
 from flask import Flask, request, redirect, url_for, render_template, flash, jsonify
 from flask_cors import CORS
+from ai.calibrate import calibrate_product
+from ai.inference import inspect_image
+from ai.report import generate_defect_report
 
 UPLOAD_FOLDER = "uploads"
+DATA_FOLDER = "data"
+STATS_FILE = os.path.join(DATA_FOLDER, "stats.json")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
 app = Flask(__name__)
@@ -11,6 +17,20 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.secret_key = "supersecretkey"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(DATA_FOLDER, exist_ok=True)
+
+def get_stats():
+    if not os.path.exists(STATS_FILE):
+        return {}
+    try:
+        with open(STATS_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_stats(stats):
+    with open(STATS_FILE, "w") as f:
+        json.dump(stats, f)
 
 CATEGORIES = [
     {
@@ -39,6 +59,15 @@ def allowed_file(filename):
 @app.route("/api/categories", methods=["GET"])
 def get_categories():
     return jsonify(CATEGORIES)
+
+@app.route("/api/products", methods=["GET"])
+def get_products():
+    models_dir = "models"
+    if not os.path.exists(models_dir):
+        return jsonify({"products": []})
+    
+    products = [f[:-4] for f in os.listdir(models_dir) if f.endswith(".pkl")]
+    return jsonify({"products": products})
 
 @app.route("/api/upload", methods=["POST"])
 def upload_file():
@@ -95,7 +124,15 @@ def calibrate_api(product_id):
         calibrate_product(product_id, product_dir)
         return jsonify({"status": "success", "product_id": product_id})
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/api/products/<product_id>/stats", methods=["GET"])
+def get_product_stats(product_id):
+    stats = get_stats()
+    product_stats = stats.get(product_id, {"total_scanned": 0, "total_approved": 0, "total_defective": 0})
+    return jsonify(product_stats)
 
 @app.route("/api/products/<product_id>/inspect", methods=["POST"])
 def inspect_api(product_id):
@@ -112,8 +149,24 @@ def inspect_api(product_id):
     try:
         result = inspect_image(product_id, temp_path)
         os.remove(temp_path)
+        
+        # Update stats
+        stats = get_stats()
+        if product_id not in stats:
+            stats[product_id] = {"total_scanned": 0, "total_approved": 0, "total_defective": 0}
+            
+        stats[product_id]["total_scanned"] += 1
+        if result.get("pass", False):
+            stats[product_id]["total_approved"] += 1
+        else:
+            stats[product_id]["total_defective"] += 1
+            
+        save_stats(stats)
+        
         return jsonify(result)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         if os.path.exists(temp_path):
             os.remove(temp_path)
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -132,4 +185,6 @@ def report_api(product_id):
     return jsonify(report_json)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5005)
+    
+
+    app.run(debug=True, port=5000)

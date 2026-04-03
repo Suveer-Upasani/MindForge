@@ -36,10 +36,17 @@ def inspect_image(product_id: str, image_path: str):
         x = feat_flat[:, i]
         mu = mean[:, i]
         sigma = cov[:, :, i]
-        inv_sigma = np.linalg.inv(sigma)
         
+        # safely invert preventing overflow or strict singular errors
+        try:
+            inv_sigma = np.linalg.inv(sigma)
+        except np.linalg.LinAlgError:
+            inv_sigma = np.linalg.pinv(sigma)
+            
         # mahalanobis function expects 1D arrays
-        distances[i] = mahalanobis(x, mu, inv_sigma)
+        distances[i] = float(mahalanobis(x, mu, inv_sigma))
+        
+    distances = np.nan_to_num(distances)
         
     # Reshape to spatial map
     score_map = distances.reshape(H, W)
