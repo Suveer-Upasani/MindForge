@@ -1,5 +1,16 @@
 [
     {
+        "id": "INS-4867",
+        "templateName": "tpl_1775235035",
+        "category": "Detection",
+        "timestamp": "2026-04-04T00:25:34.895546",
+        "status": "fail",
+        "anomalyScore": 78.8,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
         "id": "INS-4508",
         "templateName": "tpl_1775235035",
         "category": "Detection",
