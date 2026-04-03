@@ -6,24 +6,18 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Loader } from '../../components/ui/Loader';
-import { 
-  Camera, 
-  Monitor, 
-  Upload, 
-  Cpu, 
-  Zap, 
-  ArrowRight,
-  Info
-} from 'lucide-react';
+import { Camera, Monitor, Upload, Cpu, Zap, ArrowRight, Info } from 'lucide-react';
+import NeuralViewport from '../../components/app/NeuralViewport';
 
 export default function Inspection() {
   const navigate = useNavigate();
   const { templates } = useTemplates();
-  const { runNewInspection } = useInspection();
+  const { runNewInspection, setCurrentResult } = useInspection();
 
   const [selectedTemplateId, setSelectedTemplateId] = useState(templates.find(t => t.status === 'ready')?.id || '');
   const [image, setImage] = useState(null);
   const [isInspecting, setIsInspecting] = useState(false);
+  const [isWebcamActive, setIsWebcamActive] = useState(false);
   const [error, setError] = useState(null);
 
   const activeTemplates = templates.filter(t => t.status === 'ready');
@@ -91,11 +85,17 @@ export default function Inspection() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                       <div className="p-4 bg-gray-50 border border-gray-200 rounded-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 transition-all border-dashed">
+                       <div 
+                          onClick={() => setIsWebcamActive(true)}
+                          className="p-4 bg-gray-50 border border-gray-200 rounded-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 transition-all border-dashed"
+                       >
                           <Camera size={24} className="text-gray-500" />
                           <span className="text-xs font-medium text-gray-600">Use Webcam</span>
                        </div>
-                       <div className="p-4 bg-gray-50 border border-gray-200 rounded-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 transition-all border-dashed">
+                       <div 
+                          onClick={() => setIsWebcamActive(true)}
+                          className="p-4 bg-gray-50 border border-gray-200 rounded-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 transition-all border-dashed"
+                       >
                           <Monitor size={24} className="text-gray-500" />
                           <span className="text-xs font-medium text-gray-600">Stream Feed</span>
                        </div>
@@ -117,7 +117,23 @@ export default function Inspection() {
               </div>
            </Card>
 
-           {!image ? (
+           {isWebcamActive ? (
+              <NeuralViewport 
+                 onClose={() => setIsWebcamActive(false)}
+                 isInspecting={isInspecting}
+                 onCapture={async (file, onResult) => {
+                    setIsInspecting(true);
+                    try {
+                       const result = await runNewInspection(file, selectedTemplateId);
+                       onResult(result);
+                    } catch (err) {
+                       console.error("Frame evaluation failed:", err);
+                    } finally {
+                       setIsInspecting(false);
+                    }
+                 }}
+              />
+           ) : !image ? (
               <Card padding={false} className="overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50">
                 <div 
                   onDragOver={(e) => e.preventDefault()}

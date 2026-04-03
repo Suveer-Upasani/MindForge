@@ -1,5 +1,13 @@
 [
     {
+        "id": "tpl_1775235035",
+        "name": "Screws",
+        "category": "Textile",
+        "status": "ready",
+        "referenceImageCount": 20,
+        "updatedAt": "2026-04-03T22:21:13.216425"
+    },
+    {
         "id": "tpl_1775233926",
         "name": "Tiles",
         "category": "Ceramic",
