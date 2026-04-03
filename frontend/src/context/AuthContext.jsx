@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { authService } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -20,35 +21,36 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = (roleType, password) => {
-    // Simulated strong authentication
-    // In a real app, this would be a POST /api/login
-    
-    let userData = {};
-    if (roleType === 'company') {
-      userData = {
-        name: 'Enterprise Admin',
-        company: 'MindForge Global',
-        role: 'Administrator',
-        clearance: 'L5'
-      };
-    } else {
-      userData = {
-        name: 'Operator 04',
-        workstation: 'Line-8A',
-        role: 'Technician',
-        clearance: 'L2'
-      };
+  const login = async (roleType, email, password) => {
+    try {
+      const userData = await authService.login({ email, password });
+      setUser(userData);
+      setRole(roleType);
+      setIsAuthenticated(true);
+      
+      localStorage.setItem('mf_user', JSON.stringify(userData));
+      localStorage.setItem('mf_role', roleType);
+      return userData;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
+  };
 
-    setUser(userData);
-    setRole(roleType);
-    setIsAuthenticated(true);
-    
-    localStorage.setItem('mf_user', JSON.stringify(userData));
-    localStorage.setItem('mf_role', roleType);
-
-    return Promise.resolve();
+  const signup = async (userData) => {
+    try {
+      const newUser = await authService.signup(userData);
+      setUser(newUser);
+      setRole(userData.role);
+      setIsAuthenticated(true);
+      
+      localStorage.setItem('mf_user', JSON.stringify(newUser));
+      localStorage.setItem('mf_role', userData.role);
+      return newUser;
+    } catch (error) {
+       console.error('Signup error:', error);
+       throw error;
+    }
   };
 
   const logout = () => {
@@ -60,7 +62,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, role, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, role, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

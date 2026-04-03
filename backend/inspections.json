@@ -1,0 +1,66 @@
+[
+    {
+        "id": "INS-1184",
+        "templateName": "tpl_1775233531",
+        "category": "Detection",
+        "timestamp": "2026-04-03T22:14:46.260683",
+        "status": "fail",
+        "anomalyScore": 60.3,
+        "severity": "High"
+    },
+    {
+        "id": "INS-2138",
+        "templateName": "tpl_1775233531",
+        "category": "Detection",
+        "timestamp": "2026-04-03T22:03:42.336659",
+        "status": "fail",
+        "anomalyScore": 60.3,
+        "severity": "High"
+    },
+    {
+        "id": "INS-4687",
+        "templateName": "tpl_1775233531",
+        "category": "Detection",
+        "timestamp": "2026-04-03T22:01:21.840486",
+        "status": "fail",
+        "anomalyScore": 30.33,
+        "severity": "High"
+    },
+    {
+        "id": "INS-9313",
+        "templateName": "tpl_101",
+        "category": "Detection",
+        "timestamp": "2026-04-03T21:56:28.580061",
+        "status": "fail",
+        "anomalyScore": 62,
+        "severity": "High"
+    },
+    {
+        "id": "INS-4920",
+        "templateName": "Raw Denim Weave",
+        "category": "Textile / Fabric",
+        "timestamp": "2026-04-03T10:15:00Z",
+        "status": "pass",
+        "anomalyScore": 12,
+        "severity": "Low"
+    },
+    {
+        "id": "INS-4919",
+        "templateName": "White Ceramic Floor Tile",
+        "category": "Ceramic Tile",
+        "timestamp": "2026-04-03T09:40:00Z",
+        "status": "fail",
+        "anomalyScore": 84,
+        "severity": "High",
+        "likelyIssue": "Surface Crack / Scuffed Edge"
+    },
+    {
+        "id": "INS-4918",
+        "templateName": "Brushed Steel Panel",
+        "category": "Metal Surface",
+        "timestamp": "2026-04-02T16:22:00Z",
+        "status": "pass",
+        "anomalyScore": 18,
+        "severity": "Low"
+    }
+]

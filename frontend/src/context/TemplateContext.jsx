@@ -1,21 +1,38 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { templateService } from '../services/templateService';
 
 const TemplateContext = createContext();
 
 export const useTemplates = () => useContext(TemplateContext);
 
-const MOCK_TEMPLATES = [
-  { id: 't1', name: 'Raw Denim Weave', category: 'Textile', status: 'ready', referenceImageCount: 15, updatedAt: '2026-04-01T08:00:00Z' },
-  { id: 't2', name: 'Matte Ceramic 300x300', category: 'Ceramic', status: 'ready', referenceImageCount: 12, updatedAt: '2026-03-31T14:30:00Z' },
-  { id: 't3', name: 'Stainless Sheet Type A', category: 'Metal', status: 'draft', referenceImageCount: 0, updatedAt: '2026-04-02T11:20:00Z' },
-];
-
 export const TemplateProvider = ({ children }) => {
-  const [templates, setTemplates] = useState(MOCK_TEMPLATES);
+  const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const addTemplate = (template) => {
-    setTemplates(prev => [...prev, { ...template, id: `t${Date.now()}`, status: 'draft', referenceImageCount: 0, updatedAt: new Date().toISOString() }]);
+  useEffect(() => {
+    async function fetchTemplates() {
+      try {
+        const data = await templateService.getTemplates();
+        setTemplates(data);
+      } catch (err) {
+        console.error('Failed to load templates:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTemplates();
+  }, []);
+
+  const addTemplate = async (templateData) => {
+    try {
+      const newTemplate = await templateService.createTemplate(templateData);
+      setTemplates(prev => [newTemplate, ...prev]);
+      return newTemplate;
+    } catch (err) {
+      console.error('Failed to create template:', err);
+      throw err;
+    }
   };
 
   const updateTemplateStatus = (id, status, count) => {
@@ -23,7 +40,7 @@ export const TemplateProvider = ({ children }) => {
   };
 
   return (
-    <TemplateContext.Provider value={{ templates, selectedTemplate, setSelectedTemplate, addTemplate, updateTemplateStatus }}>
+    <TemplateContext.Provider value={{ templates, selectedTemplate, setSelectedTemplate, addTemplate, updateTemplateStatus, loading }}>
       {children}
     </TemplateContext.Provider>
   );

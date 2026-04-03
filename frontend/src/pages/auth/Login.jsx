@@ -10,15 +10,22 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
-  const handleSubmit = (e) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     
-    setTimeout(() => {
-      login('sme');
-      setLoading(false);
+    try {
+      await login('technician', email, password);
       navigate('/');
-    }, 1500);
+    } catch (err) {
+      console.error('Login error:', err);
+      alert(err.message || 'Login failed. Check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,10 +48,10 @@ export default function Login() {
         </div>
 
         <Card className="border border-gray-200 shadow-xl bg-white overflow-hidden p-0">
-          <div className="p-6 pb-0 mb-[-1rem] text-center border-b border-gray-100 flex flex-col items-center">
-             <Building2 size={24} className="text-blue-600 mb-2" />
-             <h2 className="text-xl font-bold text-gray-900 mb-4">SME Provider Login</h2>
-          </div>
+           <div className="p-6 pb-0 mb-[-1rem] text-center border-b border-gray-100 flex flex-col items-center text-gray-900">
+              <Building2 size={24} className="text-blue-600 mb-2" />
+              <h2 className="text-xl font-bold mb-4">Enterprise Login</h2>
+           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
             <Input 
@@ -53,6 +60,8 @@ export default function Login() {
               type="email" 
               placeholder="Enter your email" 
               required 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="bg-white border-gray-300 focus:border-blue-500 text-gray-900"
             />
             
@@ -62,6 +71,8 @@ export default function Login() {
               type="password" 
               placeholder="••••••••" 
               required 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="bg-white border-gray-300 focus:border-blue-500 text-gray-900"
             />
 
