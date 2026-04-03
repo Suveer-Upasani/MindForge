@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTemplates } from '../../context/TemplateContext';
 import { Card } from '../../components/ui/Card';
@@ -6,6 +6,9 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { ArrowLeft, Save, Upload, Images, CheckCircle2 } from 'lucide-react';
 import { Loader } from '../../components/ui/Loader';
+import tService from '../../services/templateService';
+
+console.log('MindForge: Service Layer Initialized - tService:', !!tService);
 
 const MOCK_CALIBRATION_TIME = 2500; // Fast for demo purposes
 
@@ -22,37 +25,43 @@ export default function AddProduct() {
   const [images, setImages] = useState([]);
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [calibrationComplete, setCalibrationComplete] = useState(false);
+  const [accuracy, setAccuracy] = useState(null);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    // Create local object URLs for display
-    const newImages = files.map(file => URL.createObjectURL(file));
-    setImages(prev => [...prev, ...newImages].slice(0, 20)); // Max 20
+    setImages(prev => [...prev, ...files].slice(0, 20)); // Max 20
   };
 
-  const handleSubmit = (e) => {
+  const removeImage = (idx) => {
+    setImages(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || images.length === 0) return;
     
     setIsCalibrating(true);
     
-    // Simulate Calibration Engine (ViT / ConvNeXt features, PatchCore/PaDiM fit under 20 seconds)
-    setTimeout(() => {
+    try {
+      const newTemplate = await addTemplate({
+        name: formData.name,
+        category: formData.category
+      });
+      
+      const result = await tService.calibrateTemplate(newTemplate.id, images);
+      setAccuracy(result.accuracy);
+      
       setIsCalibrating(false);
       setCalibrationComplete(true);
       
-      // Save product to dashboard
-      addTemplate({
-        name: formData.name,
-        category: formData.category,
-        description: `Model trained on ${images.length} images.`,
-        tolerance: 'Medium'
-      });
-      
       setTimeout(() => {
          navigate('/');
-      }, 1500); // Redirect after showing success
-    }, MOCK_CALIBRATION_TIME);
+      }, 3000);
+    } catch (err) {
+      console.error('Calibration error:', err);
+      alert('Neural Link unstable. Calibration failed: ' + err.message);
+      setIsCalibrating(false);
+    }
   };
 
   if (isCalibrating) {
@@ -69,10 +78,16 @@ export default function AddProduct() {
 
   if (calibrationComplete) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <CheckCircle2 size={64} className="text-green-500 mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900">Custom Model Saved!</h2>
-        <p className="text-gray-500">Product registered successfully. Returning to dashboard...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in zoom-in duration-500">
+        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+           <CheckCircle2 size={48} />
+        </div>
+        <h2 className="text-3xl font-bold text-gray-900">Training Complete</h2>
+        <div className="px-6 py-3 bg-blue-50 border border-blue-200 rounded-lg flex flex-col items-center gap-1">
+           <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Model Precision Score</span>
+           <span className="text-2xl font-black text-blue-700">{accuracy}%</span>
+        </div>
+        <p className="text-gray-500 mt-4">Model registered and synced. Returning to dashboard...</p>
       </div>
     );
   }
@@ -139,9 +154,16 @@ export default function AddProduct() {
 
              {images.length > 0 && (
                 <div className="mt-6 flex flex-wrap gap-4">
-                   {images.map((src, idx) => (
-                     <div key={idx} className="w-16 h-16 rounded overflow-hidden shadow-sm border border-gray-200">
-                        <img src={src} alt="Uploaded preview" className="w-full h-full object-cover" />
+                   {images.map((file, idx) => (
+                     <div key={idx} className="w-16 h-16 rounded overflow-hidden shadow-sm border border-gray-200 relative group">
+                        <img src={URL.createObjectURL(file)} alt="Uploaded preview" className="w-full h-full object-cover" />
+                        <button 
+                          type="button"
+                          onClick={() => removeImage(idx)}
+                          className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold"
+                        >
+                          REMOVE
+                        </button>
                      </div>
                    ))}
                 </div>

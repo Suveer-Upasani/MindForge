@@ -8,17 +8,33 @@ import { Boxes, Zap, HardDrive } from 'lucide-react';
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signup } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    name: '',
+    password: '',
+    company: '',
+    role: 'technician'
+  });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      login('user');
-      setLoading(false);
+    try {
+      await signup(formData);
       navigate('/');
-    }, 1500);
+    } catch (err) {
+      console.error('Signup error:', err);
+      alert(err.message || 'Signup failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -37,20 +53,25 @@ export default function Signup() {
 
         <Card className="border border-gray-200 shadow-xl bg-white p-10">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <Input label="Email Address" type="email" placeholder="john@acme.com" required className="bg-white border-gray-300 focus:border-blue-500 text-gray-900" />
-               <Input label="Full Name" placeholder="John Doe" required className="bg-white border-gray-300 focus:border-blue-500 text-gray-900" />
-               <Input label="Password" type="password" placeholder="••••••••" required className="bg-white border-gray-300 focus:border-blue-500 text-gray-900" />
-               <Input label="Company Size" type="number" placeholder="Number of employees" required className="bg-white border-gray-300 focus:border-blue-500 text-gray-900" />
-               <div className="flex flex-col gap-1.5 md:col-span-2">
-                  <label className="text-sm font-medium text-gray-700 px-1">Category</label>
-                  <select className="bg-white border border-gray-300 rounded-md px-4 py-3 text-sm text-gray-900 focus:border-blue-500 outline-none hover:border-blue-400 transition-colors">
-                     <option>Textile</option>
-                     <option>Ceramic</option>
-                     <option>Metal</option>
-                  </select>
-               </div>
-            </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input label="Email Address" name="email" type="email" placeholder="john@acme.com" required value={formData.email} onChange={handleChange} className="bg-white border-gray-300 focus:border-blue-500 text-gray-900" />
+                <Input label="Full Name" name="name" placeholder="John Doe" required value={formData.name} onChange={handleChange} className="bg-white border-gray-300 focus:border-blue-500 text-gray-900" />
+                <Input label="Password" name="password" type="password" placeholder="••••••••" required value={formData.password} onChange={handleChange} className="bg-white border-gray-300 focus:border-blue-500 text-gray-900" />
+                <Input label="Company Name" name="company" placeholder="Acme Corp" required value={formData.company} onChange={handleChange} className="bg-white border-gray-300 focus:border-blue-500 text-gray-900" />
+                <div className="flex flex-col gap-1.5 md:col-span-2">
+                   <label className="text-sm font-medium text-gray-700 px-1">Role Type</label>
+                   <select 
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      className="bg-white border border-gray-300 rounded-md px-4 py-3 text-sm text-gray-900 focus:border-blue-500 outline-none hover:border-blue-400 transition-colors"
+                   >
+                      <option value="technician">Technician / Operator</option>
+                      <option value="company">Factory Administrator</option>
+                      <option value="analyst">Quality Analyst</option>
+                   </select>
+                </div>
+             </div>
 
             <div className="space-y-4 pt-4">
                <Button variant="primary" fullWidth={true} loading={loading} className="py-4 font-bold text-lg shadow-md bg-blue-600 hover:bg-blue-700">

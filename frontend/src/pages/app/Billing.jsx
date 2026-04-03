@@ -6,10 +6,12 @@ import { Badge } from '../../components/ui/Badge';
 import { Loader } from '../../components/ui/Loader';
 import { AlertCircle, PartyPopper, X } from 'lucide-react';
 import { billingService } from '../../services/billingService';
+import { useAuth } from '../../context/AuthContext';
 
 const KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
 export default function Billing() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
   const [currentPlan, setCurrentPlan] = useState('free');
@@ -70,9 +72,9 @@ export default function Billing() {
         }
       },
       prefill: {
-        name: "John Doe",
-        email: "john.doe@example.com",
-        contact: "+919999999999",
+        name: user?.name || "MindForge User",
+        email: user?.email || "",
+        contact: "",
       },
       theme: { color: "#2563eb" },
     };

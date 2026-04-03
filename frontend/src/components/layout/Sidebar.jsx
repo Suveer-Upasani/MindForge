@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Boxes, 
-  FileSearch, 
+  Search, 
   History, 
   Settings, 
   CreditCard, 
@@ -11,6 +11,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 const NavItem = ({ to, icon: Icon, label, collapsed }) => (
   <NavLink
@@ -35,6 +36,8 @@ const NavItem = ({ to, icon: Icon, label, collapsed }) => (
 
 export const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const { user, logout } = useAuth();
+  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
 
   return (
     <aside className={`
@@ -60,7 +63,7 @@ export const Sidebar = () => {
         </p>
         <NavItem to="/" icon={LayoutDashboard} label="Dashboard" collapsed={collapsed} />
         <NavItem to="/add-product" icon={Boxes} label="Add New Product" collapsed={collapsed} />
-        <NavItem to="/inspection" icon={FileSearch} label="Inspect Product" collapsed={collapsed} />
+        <NavItem to="/inspection" icon={Search} label="Inspect Product" collapsed={collapsed} />
         
         <div className="my-6 border-t border-gray-200" />
         
@@ -74,15 +77,15 @@ export const Sidebar = () => {
       <div className="p-4 border-t border-gray-200 bg-gray-50/50">
         <div className={`flex items-center gap-3 rounded-lg p-2 ${collapsed ? 'justify-center' : ''}`}>
           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shrink-0">
-             JD
+             {initials}
           </div>
           {!collapsed && (
             <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-medium text-gray-900 truncate">John Doe</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'User'}</p>
             </div>
           )}
           {!collapsed && (
-            <button className="text-gray-400 hover:text-red-600 transition-colors">
+            <button onClick={logout} className="text-gray-400 hover:text-red-600 transition-colors">
               <LogOut size={16} />
             </button>
           )}

@@ -37,7 +37,9 @@ export default function Dashboard() {
   const { history } = useInspection();
 
   const activeTemplates = templates.filter(t => t.status === 'ready').length;
-  const passRate = Math.round((history.filter(h => h.status === 'pass').length / history.length) * 100);
+  const passRate = history.length > 0 
+    ? Math.round((history.filter(h => h.status === 'pass').length / history.length) * 100)
+    : 0;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

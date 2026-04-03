@@ -21,8 +21,8 @@ export default function HistoryPage() {
   const [filterStatus, setFilterStatus] = useState('all');
 
   const filteredHistory = history.filter(item => 
-    (item.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     item.templateName.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (item.id?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+     item.templateName?.toLowerCase().includes(searchTerm.toLowerCase())) &&
     (filterStatus === 'all' || item.status === filterStatus)
   );
 

@@ -16,14 +16,12 @@ import {
   Info
 } from 'lucide-react';
 
-import { api } from '../../services/api';
-
 export default function Inspection() {
   const navigate = useNavigate();
   const { templates } = useTemplates();
-  const { addInspection } = useInspection();
+  const { runNewInspection } = useInspection();
 
-  const [selectedTemplateId, setSelectedTemplateId] = useState(templates.filter(t => t.status === 'ready')[0]?.id || '');
+  const [selectedTemplateId, setSelectedTemplateId] = useState(templates.find(t => t.status === 'ready')?.id || '');
   const [image, setImage] = useState(null);
   const [isInspecting, setIsInspecting] = useState(false);
   const [error, setError] = useState(null);
@@ -44,27 +42,12 @@ export default function Inspection() {
     
     setIsInspecting(true);
     setError(null);
-    const template = templates.find(t => t.id === selectedTemplateId);
     
     try {
-      // Real API Upload
-      const response = await api.uploadInference(template.category, [image]);
-      
-      const inference = response.inference;
-      
-      const result = addInspection({
-        templateId: selectedTemplateId,
-        templateName: template.name,
-        category: template.category,
-        status: inference.status,
-        anomalyScore: inference.anomalyScore,
-        severity: inference.severity,
-        likelyIssue: inference.likelyIssue,
-        serverRef: response.files[0]
-      });
-
+      await runNewInspection(image, selectedTemplateId);
       navigate('/results');
     } catch (err) {
+      console.error('Inspection error:', err);
       setError('Neural Link Severed. Failed to upload sample to inference engine.');
     } finally {
       setIsInspecting(false);
@@ -205,19 +188,34 @@ export default function Inspection() {
                  Model Details
               </h4>
               <div className="space-y-6">
-                 <div>
-                    <div className="flex justify-between mb-2">
-                       <span className="text-sm text-gray-500">Expected Accuracy</span>
-                       <span className="text-sm text-gray-900 font-medium">98.4%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                       <div className="w-[98.4%] h-full bg-green-500" />
-                    </div>
-                 </div>
+                 {templates.find(t => t.id === selectedTemplateId) ? (
+                    <>
+                      <div>
+                        <div className="flex justify-between mb-2">
+                           <span className="text-sm text-gray-500">Model Precision</span>
+                           <span className="text-sm text-gray-900 font-bold">{templates.find(t => t.id === selectedTemplateId).accuracy || 98.4}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                           <div 
+                              className="h-full bg-blue-500 transition-all duration-500" 
+                              style={{ width: `${templates.find(t => t.id === selectedTemplateId).accuracy || 98.4}%` }} 
+                           />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-400">
+                         <span>Last Calibrated:</span>
+                         <span className="font-medium text-gray-600 italic">
+                            {new Date(templates.find(t => t.id === selectedTemplateId).updatedAt).toLocaleDateString()}
+                         </span>
+                      </div>
+                    </>
+                 ) : (
+                    <p className="text-sm text-gray-400 italic">Select a model to view neural specs.</p>
+                 )}
                  
-                 <div className="space-y-3">
-                    <p className="text-sm text-gray-500 leading-relaxed">
-                      The system compares uploaded images against the registered baseline product images. If the deviation is above your set tolerance, the system flags it as defective.
+                 <div className="pt-4 border-t border-gray-50">
+                    <p className="text-[11px] text-gray-400 leading-relaxed italic">
+                      This PaDiM model uses Mahalanobis distance at a 28x28 patch resolution to identify sub-pixel surface anomalies.
                     </p>
                  </div>
               </div>

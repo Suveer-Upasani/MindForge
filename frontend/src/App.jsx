@@ -9,6 +9,8 @@ import AddProduct from './pages/app/AddProduct';
 import Inspection from './pages/app/Inspection';
 import Results from './pages/app/Results';
 import History from './pages/app/History';
+import Billing from './pages/app/Billing';
+
 
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
@@ -43,7 +45,8 @@ export default function App() {
                 <Route path="add-product" element={<AddProduct />} />
                 <Route path="inspection" element={<Inspection />} />
                 <Route path="results" element={<Results />} />
-                <Route path="billing" element={<div className="p-8">Billing View Placeholder</div>} />
+                <Route path="billing" element={<Billing />} />
+
               </Route>
 
               {/* Catch all */}
