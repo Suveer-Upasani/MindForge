@@ -1,4 +1,6 @@
 import os
+import json
+from datetime import datetime
 from flask import Flask, request, redirect, url_for, render_template, flash, jsonify
 from flask_cors import CORS
 
@@ -11,6 +13,22 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.secret_key = "supersecretkey"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+BILLING_HISTORY_FILE = "billing_history.json"
+
+def get_billing_history():
+    if not os.path.exists(BILLING_HISTORY_FILE):
+        return []
+    with open(BILLING_HISTORY_FILE, "r") as f:
+        return json.load(f)
+
+def save_to_billing_history(transaction):
+    history = get_billing_history()
+    transaction["date"] = datetime.now().isoformat()
+    transaction["status"] = "success"
+    history.insert(0, transaction)
+    with open(BILLING_HISTORY_FILE, "w") as f:
+        json.dump(history, f, indent=4)
+    return transaction
 
 CATEGORIES = [
     {
@@ -130,6 +148,19 @@ def report_api(product_id):
     
     report_json = generate_defect_report(product_id, product_category, anomaly_score, heatmap_base64)
     return jsonify(report_json)
+
+@app.route("/api/billing/history", methods=["GET"])
+def billing_history_api():
+    return jsonify(get_billing_history())
+
+@app.route("/api/billing/transaction", methods=["POST"])
+def save_transaction_api():
+    data = request.json
+    if not data:
+        return jsonify({"status": "error", "message": "No data provided"}), 400
+    
+    saved = save_to_billing_history(data)
+    return jsonify({"status": "success", "transaction": saved})
 
 if __name__ == "__main__":
     app.run(debug=True, port=5005)
