@@ -1,5 +1,7 @@
 import os
 import json
+import uuid
+from datetime import datetime
 from flask import Flask, request, redirect, url_for, render_template, flash, jsonify
 from flask_cors import CORS
 from ai.calibrate import calibrate_product
@@ -31,6 +33,36 @@ def get_stats():
 def save_stats(stats):
     with open(STATS_FILE, "w") as f:
         json.dump(stats, f)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BILLING_HISTORY_FILE = os.path.join(BASE_DIR, "billing_history.json")
+USERS_FILE = os.path.join(BASE_DIR, "users.json")
+TEMPLATES_FILE = os.path.join(BASE_DIR, "templates.json")
+INSPECTIONS_FILE = os.path.join(BASE_DIR, "inspections.json")
+
+def load_json(filename, default=[]):
+    if not os.path.exists(filename):
+        return default
+    with open(filename, "r") as f:
+        try:
+            return json.load(f)
+        except:
+            return default
+
+def save_json(filename, data):
+    with open(filename, "w") as f:
+        json.dump(data, f, indent=4)
+
+def get_billing_history():
+    return load_json(BILLING_HISTORY_FILE)
+
+def save_to_billing_history(transaction):
+    history = get_billing_history()
+    transaction["date"] = datetime.now().isoformat()
+    transaction["status"] = "success"
+    history.insert(0, transaction)
+    save_json(BILLING_HISTORY_FILE, history)
+    return transaction
 
 CATEGORIES = [
     {
@@ -163,6 +195,36 @@ def inspect_api(product_id):
             
         save_stats(stats)
         
+        # --- start DB history logging ---
+        templates = load_json(TEMPLATES_FILE)
+        model_info = next((t for t in templates if t['id'] == product_id), {})
+        model_accuracy = model_info.get('accuracy', 98.4)
+        
+        inspections = load_json(INSPECTIONS_FILE)
+        new_entry = {
+            "id": f"INS-{__import__('random').randint(1000, 9999)}",
+            "templateName": product_id, 
+            "category": "Detection", 
+            "timestamp": datetime.now().isoformat(),
+            "status": "pass" if result.get("pass", False) else "fail",
+            "anomalyScore": result.get("anomaly_score", 0),
+            "severity": "High" if not result.get("pass", False) else "Low",
+            "modelAccuracy": model_accuracy,
+            "likelyIssue": "Surface Discontinuity / Material Anomaly" if not result.get("pass", False) else "Consistent Surface"
+        }
+        inspections.insert(0, new_entry)
+        save_json(INSPECTIONS_FILE, inspections)
+        
+        result.update({
+            "id": new_entry["id"],
+            "templateName": model_info.get('name', product_id),
+            "category": model_info.get('category', 'Detection'),
+            "modelAccuracy": model_accuracy,
+            "likelyIssue": new_entry["likelyIssue"],
+            "severity": new_entry["severity"]
+        })
+        # --- end DB history logging ---
+        
         return jsonify(result)
     except Exception as e:
         import traceback
@@ -183,6 +245,78 @@ def report_api(product_id):
     
     report_json = generate_defect_report(product_id, product_category, anomaly_score, heatmap_base64)
     return jsonify(report_json)
+
+
+# --- AUTH ROUTES ---
+
+@app.route("/api/auth/signup", methods=["POST"])
+def auth_signup():
+    data = request.json
+    users = load_json(USERS_FILE)
+    if any(u['email'] == data['email'] for u in users):
+        return jsonify({"error": "User already exists"}), 400
+    
+    new_user = {
+        "id": str(uuid.uuid4()),
+        "name": data.get("name", "New User"),
+        "email": data["email"],
+        "password": data["password"], # In real app, hash this!
+        "role": data.get("role", "technician"),
+        "company": data.get("company", "Independent"),
+        "createdAt": datetime.now().isoformat()
+    }
+    users.append(new_user)
+    save_json(USERS_FILE, users)
+    return jsonify(new_user)
+
+@app.route("/api/auth/login", methods=["POST"])
+def auth_login():
+    data = request.json
+    print("Exact request body being sent:", data)
+    users = load_json(USERS_FILE)
+    user = next((u for u in users if u.get('email') == data.get('email') and u.get('password') == data.get('password')), None)
+    if not user:
+        return jsonify({"error": "Invalid credentials"}), 401
+    return jsonify(user)
+
+# --- TEMPLATE ROUTES ---
+
+@app.route("/api/templates", methods=["GET"])
+def get_templates():
+    return jsonify(load_json(TEMPLATES_FILE))
+
+@app.route("/api/templates", methods=["POST"])
+def create_template():
+    data = request.json
+    templates = load_json(TEMPLATES_FILE)
+    new_template = {
+        "id": f"tpl_{int(datetime.now().timestamp())}",
+        "name": data["name"],
+        "category": data["category"],
+        "status": "draft",
+        "referenceImageCount": 0,
+        "updatedAt": datetime.now().isoformat()
+    }
+    templates.insert(0, new_template)
+    save_json(TEMPLATES_FILE, templates)
+    return jsonify(new_template)
+
+@app.route("/api/inspections", methods=["GET"])
+def get_inspections():
+    return jsonify(load_json(INSPECTIONS_FILE))
+
+@app.route("/api/billing/history", methods=["GET"])
+def billing_history_api():
+    return jsonify(get_billing_history())
+
+@app.route("/api/billing/transaction", methods=["POST"])
+def save_transaction_api():
+    data = request.json
+    if not data:
+        return jsonify({"status": "error", "message": "No data provided"}), 400
+    
+    saved = save_to_billing_history(data)
+    return jsonify({"status": "success", "transaction": saved})
 
 if __name__ == "__main__":
     

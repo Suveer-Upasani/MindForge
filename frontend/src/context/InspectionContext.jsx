@@ -43,8 +43,18 @@ export const InspectionProvider = ({ children }) => {
     }
   };
 
+  const addInspection = (record) => {
+    const newRecord = {
+      ...record,
+      id: record.id || `INS-${Math.floor(Math.random() * 9000) + 1000}`,
+      timestamp: record.timestamp || new Date().toISOString()
+    };
+    setHistory(prev => [newRecord, ...prev]);
+    setCurrentResult(newRecord);
+  };
+
   return (
-    <InspectionContext.Provider value={{ history, currentResult, setCurrentResult, runNewInspection, loading }}>
+    <InspectionContext.Provider value={{ history, currentResult, setCurrentResult, runNewInspection, addInspection, loading }}>
       {children}
     </InspectionContext.Provider>
   );

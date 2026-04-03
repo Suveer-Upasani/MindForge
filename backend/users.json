@@ -16,5 +16,14 @@
         "role": "technician",
         "company": "crud",
         "createdAt": "2026-04-03T21:46:00.121765"
+    },
+    {
+        "id": "2bb97bfa-3f27-4bff-a6d5-b2a4e1fcb336",
+        "name": "Ashitosh Lavhate",
+        "email": "ashitoshlavhate2@gmail.com",
+        "password": "vv",
+        "role": "technician",
+        "company": "aa",
+        "createdAt": "2026-04-04T00:13:34.342682"
     }
 ]
