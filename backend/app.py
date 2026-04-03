@@ -179,6 +179,7 @@ def inspect_api(product_id):
     file.save(temp_path)
     
     try:
+<<<<<<< HEAD
         result = inspect_image(product_id, temp_path)
         os.remove(temp_path)
         
@@ -190,12 +191,28 @@ def inspect_api(product_id):
         stats[product_id]["total_scanned"] += 1
         if result.get("pass", False):
             stats[product_id]["total_approved"] += 1
+=======
+        # Check if model exists
+        model_path = os.path.join('models', f'{product_id}.pkl')
+        if not os.path.exists(model_path):
+            # Fallback for testing/simulation
+            result = {
+                "status": "pass" if random.random() > 0.3 else "fail",
+                "anomaly_score": random.randint(5, 80),
+                "heatmap_base64": ""
+            }
+>>>>>>> origin/khushi
         else:
             stats[product_id]["total_defective"] += 1
             
         save_stats(stats)
         
+<<<<<<< HEAD
         # --- start DB history logging ---
+=======
+        # Log to inspection history asynchronously (simulated by updating JSON immediately but returning result faster)
+        inspections = load_json(INSPECTIONS_FILE)
+>>>>>>> origin/khushi
         templates = load_json(TEMPLATES_FILE)
         model_info = next((t for t in templates if t['id'] == product_id), {})
         model_accuracy = model_info.get('accuracy', 98.4)
@@ -215,7 +232,16 @@ def inspect_api(product_id):
         inspections.insert(0, new_entry)
         save_json(INSPECTIONS_FILE, inspections)
         
+<<<<<<< HEAD
         result.update({
+=======
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+        # Build full Telemetry package
+        return jsonify({
+            **result,
+>>>>>>> origin/khushi
             "id": new_entry["id"],
             "templateName": model_info.get('name', product_id),
             "category": model_info.get('category', 'Detection'),
@@ -223,9 +249,12 @@ def inspect_api(product_id):
             "likelyIssue": new_entry["likelyIssue"],
             "severity": new_entry["severity"]
         })
+<<<<<<< HEAD
         # --- end DB history logging ---
         
         return jsonify(result)
+=======
+>>>>>>> origin/khushi
     except Exception as e:
         import traceback
         traceback.print_exc()
