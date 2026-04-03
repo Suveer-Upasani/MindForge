@@ -1,22 +1,27 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
 venv/
 env/
 .env
-.venv
+.venv/
 
-# Models and Uploads
-backend/models/
-backend/uploads/
+# Data & Output
+backend/models/*.pkl
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/data/*.json
+!backend/data/.gitkeep
 
 # Node
-node_modules/
-dist/
-build/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
 .npm/
 
 # OS
 .DS_Store
 Thumbs.db
+*.log
+.vscode/

@@ -6,7 +6,8 @@ torch
 torchvision
 opencv-python
 numpy
-pillow
+Pillow
 openai
 scikit-learn
+scipy
 Werkzeug==2.3.6
