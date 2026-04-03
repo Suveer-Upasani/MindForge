@@ -1,2 +1,12 @@
+# Dependencies for MindForge Backend
+
 Flask==2.3.2
+flask-cors
+torch
+torchvision
+opencv-python
+numpy
+pillow
+openai
+scikit-learn
 Werkzeug==2.3.6
