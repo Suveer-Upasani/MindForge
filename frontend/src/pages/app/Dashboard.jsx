@@ -2,6 +2,8 @@ import { useTemplates } from '../../context/TemplateContext';
 import { useInspection } from '../../context/InspectionContext';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import React, { useState, useEffect } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { 
   CheckCircle2, 
   AlertTriangle, 
@@ -32,9 +34,25 @@ const StatCard = ({ title, value, subtext, icon: Icon, trend }) => (
   </Card>
 );
 
+
 export default function Dashboard() {
   const { templates } = useTemplates();
   const { history } = useInspection();
+
+  const [pieData, setPieData] = useState([]);
+
+  useEffect(() => {
+    fetch(`http://${window.location.hostname}:5000/api/stats/passfail`)
+      .then(res => res.json())
+      .then(data => {
+        setPieData([
+          { name: 'Pass', value: data.passed, color: '#10b981' },
+          { name: 'Fail', value: data.failed, color: '#ef4444' }
+        ]);
+      })
+      .catch(err => console.error(err));
+  }, []);
+
 
   const activeTemplates = templates.filter(t => t.status === 'ready').length;
   const passRate = history.length > 0 
@@ -65,10 +83,10 @@ export default function Dashboard() {
         />
         <StatCard 
           title="Avg Pass Rate" 
-          value={`${passRate}%`} 
+          value={history.length === 0 ? "—" : `${passRate}%`} 
           subtext="Historical Metrics" 
           icon={CheckCircle2} 
-          trend={2.4}
+          trend={history.length === 0 ? null : 2.4}
         />
         <StatCard 
           title="Active Templates" 
@@ -118,13 +136,13 @@ export default function Dashboard() {
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-right text-sm font-medium text-gray-700">
-                      {row.anomalyScore}%
+                      {Number(row.anomalyScore).toFixed(2) + "%"}
                     </td>
                   </tr>
                 ))}
                 {history.length === 0 && (
                   <tr>
-                    <td colSpan="4" className="px-6 py-8 text-center text-sm text-gray-500">No inspections yet. Start an inspection to see results here.</td>
+                    <td colSpan="4" className="px-6 py-8 text-center text-sm text-gray-500">No inspections yet. Run your first inspection to see results.</td>
                   </tr>
                 )}
               </tbody>
@@ -132,9 +150,43 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        
         {/* Quick Actions / Integration Info */}
         <div className="space-y-6">
+          <h2 className="text-lg font-bold text-gray-900">Inspection Overview</h2>
+          <Card className="border border-gray-200 p-6 bg-white">
+            <h4 className="text-xs font-bold text-gray-500 uppercase mb-4">Pass / Fail Trend</h4>
+            <div className="h-64 w-full">
+              {pieData.length > 0 && (pieData[0].value + pieData[1].value) > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : pieData.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-gray-400">Loading...</div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-400 text-center px-4">No inspection data yet to display chart.</div>
+              )}
+            </div>
+          </Card>
+          
           <h2 className="text-lg font-bold text-gray-900">Quick Actions</h2>
+
           <Card className="bg-blue-50 border-blue-100 p-8 flex flex-col items-center text-center">
              <div className="w-16 h-16 rounded bg-white flex items-center justify-center text-blue-600 mb-6 shadow-sm border border-blue-50">
                 <Box size={32} />

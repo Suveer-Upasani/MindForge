@@ -1,122 +1,98 @@
 [
     {
-        "id": "tpl_1775247332",
-        "name": "pen",
-        "category": "Textile",
-        "status": "draft",
-        "referenceImageCount": 0,
-        "updatedAt": "2026-04-04T01:45:32.798348"
-    },
-    {
-        "id": "tpl_1775243400",
-        "name": "sD",
-        "category": "Textile",
-        "status": "draft",
-        "referenceImageCount": 0,
-        "updatedAt": "2026-04-04T00:40:00.991747"
-    },
-    {
-        "id": "tpl_1775242591",
-        "name": "yo",
+        "id": "tpl_1775277815",
+        "name": "abc",
         "category": "Metal",
         "status": "draft",
         "referenceImageCount": 0,
-        "updatedAt": "2026-04-04T00:26:31.949353"
+        "updatedAt": "2026-04-04T10:13:35.667035"
     },
     {
-        "id": "tpl_1775241898",
-        "name": "Apple",
+        "id": "tpl_1775276818",
+        "name": "abc",
         "category": "Metal",
         "status": "draft",
         "referenceImageCount": 0,
-        "updatedAt": "2026-04-04T00:14:58.872727"
+        "updatedAt": "2026-04-04T09:56:58.000592"
     },
     {
-        "id": "tpl_1775233926",
-        "name": "Tiles",
-        "category": "Ceramic",
-        "status": "ready",
-        "referenceImageCount": 20,
-        "updatedAt": "2026-04-03T22:02:27.253628"
+        "id": "tpl_1775276631",
+        "name": "asdx",
+        "category": "Metal",
+        "status": "draft",
+        "referenceImageCount": 0,
+        "updatedAt": "2026-04-04T09:53:51.103766"
     },
     {
-        "id": "tpl_1775233531",
-        "name": "tiles",
+        "id": "tpl_1775276470",
+        "name": "asdf",
+        "category": "Metal",
+        "status": "draft",
+        "referenceImageCount": 0,
+        "updatedAt": "2026-04-04T09:51:10.416308"
+    },
+    {
+        "id": "tpl_1775274232",
+        "name": "test",
+        "category": "Metal",
+        "status": "draft",
+        "referenceImageCount": 0,
+        "updatedAt": "2026-04-04T09:13:52.292091"
+    },
+    {
+        "id": "tpl_1775273394",
+        "name": "asd",
+        "category": "Metal",
+        "status": "draft",
+        "referenceImageCount": 0,
+        "updatedAt": "2026-04-04T08:59:54.842808"
+    },
+    {
+        "id": "tpl_1775272423",
+        "name": "test",
+        "category": "Metal",
+        "status": "draft",
+        "referenceImageCount": 0,
+        "updatedAt": "2026-04-04T08:43:43.724494"
+    },
+    {
+        "id": "tpl_1775272364",
+        "name": "iug",
+        "category": "Metal",
+        "status": "draft",
+        "referenceImageCount": 0,
+        "updatedAt": "2026-04-04T08:42:44.828356"
+    },
+    {
+        "id": "tpl_1775272338",
+        "name": "as",
         "category": "Textile",
-        "status": "ready",
-        "referenceImageCount": 20,
-        "updatedAt": "2026-04-03T21:56:01.749474"
-    },
-    {
-        "id": "tpl_1775233381",
-        "name": "Tiles",
-        "category": "Ceramic",
         "status": "draft",
         "referenceImageCount": 0,
-        "updatedAt": "2026-04-03T21:53:01.584739"
+        "updatedAt": "2026-04-04T08:42:18.309794"
     },
     {
-        "id": "tpl_1775233254",
-        "name": "Tiles",
-        "category": "Ceramic",
+        "id": "tpl_1775268357",
+        "name": "test",
+        "category": "Metal",
         "status": "draft",
         "referenceImageCount": 0,
-        "updatedAt": "2026-04-03T21:50:54.023836"
+        "updatedAt": "2026-04-04T07:35:57.455192"
     },
     {
-        "id": "tpl_1775233241",
-        "name": "Tiles",
-        "category": "Ceramic",
-        "status": "draft",
-        "referenceImageCount": 0,
-        "updatedAt": "2026-04-03T21:50:41.977883"
-    },
-    {
-        "id": "tpl_1775232505",
-        "name": "Tiles",
+        "id": "tpl_1775267392",
+        "name": "sd",
         "category": "Textile",
         "status": "draft",
         "referenceImageCount": 0,
-        "updatedAt": "2026-04-03T21:38:25.795012"
+        "updatedAt": "2026-04-04T07:19:52.989432"
     },
     {
-        "id": "tpl_101",
-        "name": "Blue Printed Cotton",
-        "category": "Textile / Fabric",
-        "referenceImageCount": 15,
-        "status": "ready",
-        "updatedAt": "2023-10-12T10:00:00Z"
-    },
-    {
-        "id": "tpl_102",
-        "name": "White Ceramic Floor Tile",
-        "category": "Ceramic Tile",
-        "referenceImageCount": 20,
-        "status": "ready",
-        "updatedAt": "2023-10-14T11:30:00Z"
-    },
-    {
-        "id": "tpl_103",
-        "name": "Brushed Steel Panel",
-        "category": "Metal Surface",
-        "referenceImageCount": 18,
-        "status": "ready",
-        "updatedAt": "2023-10-15T09:15:00Z"
-    },
-    {
-        "id": "tpl_104",
-        "name": "Matte Glazed Tile",
-        "category": "Ceramic Tile",
-        "referenceImageCount": 8,
+        "id": "tpl_1775266926",
+        "name": "test",
+        "category": "Metal",
         "status": "draft",
-        "updatedAt": "2023-10-16T14:20:00Z"
-    },
-    {
-        "id": "tpl_105",
-        "name": "Black Cotton Sleeve Panel",
-        "category": "Textile / Fabric",
-        "referenceImageCount": 12,
-        "status": "ready",
-        "updatedAt": "2023-10-17T16:45:00Z"
+        "referenceImageCount": 0,
+        "updatedAt": "2026-04-04T07:12:06.736739"
     }
 ]

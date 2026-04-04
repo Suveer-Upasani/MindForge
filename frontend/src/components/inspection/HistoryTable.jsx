@@ -31,7 +31,7 @@ export default function HistoryTable({ inspections, onView }) {
                   {row.status}
                 </span>
               </td>
-              <td className="px-6 py-4 text-sm font-bold text-slate-900">{row.anomalyScore}</td>
+              <td className="px-6 py-4 text-sm font-bold text-slate-900">{Number(row.anomalyScore).toFixed(2) + "%"}</td>
               <td className="px-6 py-4">
                 <SeverityBadge level={row.severity} />
               </td>

@@ -110,7 +110,7 @@ export default function HistoryPage() {
                        </Badge>
                     </td>
                     <td className="px-6 py-4 text-center">
-                       <div className="font-mono text-sm font-bold text-slate-300">{row.anomalyScore}%</div>
+                       <div className="font-mono text-sm font-bold text-slate-300">{Number(row.anomalyScore).toFixed(2) + "%"}</div>
                        <div className={`text-[8px] font-bold uppercase tracking-widest ${row.severity === 'High' ? 'text-status-fail' : 'text-slate-500'}`}>{row.severity} RISK</div>
                     </td>
                     <td className="px-6 py-4 text-right">

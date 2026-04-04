@@ -7,7 +7,10 @@ export const billingService = {
    */
   async getBillingHistory() {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/billing/history`);
+      const token = localStorage.getItem('mindforge_token');
+      const response = await fetch(`${API_BASE_URL}/api/billing/history`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!response.ok) {
         // If 404, we can assume the endpoint isn't ready yet and return empty list
         if (response.status === 404) return [];
@@ -31,6 +34,7 @@ export const billingService = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('mindforge_token')}`
         },
         body: JSON.stringify(paymentData),
       });

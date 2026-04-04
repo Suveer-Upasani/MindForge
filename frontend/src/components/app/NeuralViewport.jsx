@@ -127,7 +127,7 @@ export default function NeuralViewport({ onCapture, onClose, isInspecting }) {
             <div className={`px-8 py-5 rounded-2xl flex flex-col items-center gap-2 shadow-2xl border-2 ${isPass ? 'bg-green-500/90 border-green-400' : 'bg-red-500/90 border-red-400'} text-white`}>
               {isPass ? <CheckCircle2 size={44} /> : <AlertCircle size={44} />}
               <span className="text-3xl font-black uppercase tracking-tight">{result.status}</span>
-              <span className="text-sm opacity-80">Anomaly Score: {result.anomalyScore ?? result.anomaly_score ?? '—'}</span>
+              <span className="text-sm opacity-80">Anomaly Score: {result.anomalyScore || result.anomaly_score ? Number(result.anomalyScore || result.anomaly_score).toFixed(2) + '%' : '—'}</span>
             </div>
           </div>
         )}

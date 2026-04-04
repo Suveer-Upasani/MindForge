@@ -21,6 +21,7 @@ class Product(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("companies.id"))
+    user_id = Column(Integer, ForeignKey("companies.id"))
     name = Column(String, nullable=False)
     category = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -67,6 +68,7 @@ class BillingLog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("companies.id"))
+    user_id = Column(Integer, ForeignKey("companies.id"))
     inspections_count = Column(Integer)
     amount = Column(Float)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -76,6 +78,7 @@ class ActivityLog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("companies.id"))
+    user_id = Column(Integer, ForeignKey("companies.id"))
     action = Column(String)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
@@ -84,6 +87,7 @@ class PaymentHistory(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("companies.id"))
+    user_id = Column(Integer, ForeignKey("companies.id"))
     amount = Column(Float)
     plan_type = Column(String)
     payment_status = Column(String)

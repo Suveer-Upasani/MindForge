@@ -27,7 +27,7 @@ export default function ResultSummaryCard({ result }) {
       <div className="w-full grid grid-cols-2 gap-4 text-left border-t border-teal-50 pt-6">
         <div>
           <span className="block text-[10px] text-teal-600 font-bold uppercase tracking-widest mb-1">Anomaly Score</span>
-          <span className="block text-xl font-bold text-slate-900">{result.anomalyScore}<span className="text-sm text-slate-400 font-medium ml-1">/ 100</span></span>
+          <span className="block text-xl font-bold text-slate-900">{Number(result.anomalyScore).toFixed(2)}% <span className="text-sm text-slate-400 font-medium ml-1">/ 100%</span></span>
         </div>
         <div>
           <span className="block text-[10px] text-teal-600 font-bold uppercase tracking-widest mb-1">Risk Severity</span>

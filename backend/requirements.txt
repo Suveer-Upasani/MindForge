@@ -11,3 +11,8 @@ openai
 scikit-learn
 scipy
 Werkzeug==2.3.6
+PyJWT
+SQLAlchemy
+passlib
+pydantic
+python-dotenv

@@ -1,47 +1,81 @@
 import torch
-import torch.nn as nn
-from torchvision.models import resnet18, ResNet18_Weights
-from torchvision import transforms
+import torch.nn.functional as F
+import torchvision.models as models
+import torchvision.transforms as transforms
+import numpy as np
 from PIL import Image
 
+# ── Shared transform (use this EVERYWHERE) ──────────
+TRANSFORM = transforms.Compose(
+    [
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ]
+)
+
+
 class FeatureExtractor:
-    """Extracts intermediate features from a pre-trained ResNet18 model using forward hooks."""
     def __init__(self):
-        self.device = torch.device('cpu')
-        self.model = resnet18(weights=ResNet18_Weights.DEFAULT).to(self.device)
-        self.model.eval()
+        backbone = models.resnet50(pretrained=True)
+        backbone.eval()
 
-        self.features = []
-        def hook(module, input, output):
-            self.features.append(output)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        backbone = backbone.to(self.device)
 
-        # ResNet18 layer2 and layer3
-        self.model.layer2.register_forward_hook(hook)
-        self.model.layer3.register_forward_hook(hook)
+        self.layer2_out = None
+        self.layer3_out = None
 
-        self.transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=ResNet18_Weights.DEFAULT.transforms().mean, 
-                                 std=ResNet18_Weights.DEFAULT.transforms().std)
-        ])
+        # Register hooks on layer2 and layer3 ONLY
+        backbone.layer2.register_forward_hook(
+            lambda m, i, o: setattr(self, "layer2_out", o)
+        )
+        backbone.layer3.register_forward_hook(
+            lambda m, i, o: setattr(self, "layer3_out", o)
+        )
 
-    def extract(self, image: Image.Image):
-        """Extract multi-scale features from a PIL Image."""
-        self.features = [] # clear previous features
-        img_t = self.transform(image).unsqueeze(0).to(self.device)
+        self.backbone = backbone
 
+        # PaDiM specific: Randomly select 256 dimensions out of 1536
+        # to dramatically reduce covariance array size and inversion speeds
+        np.random.seed(42)
+        self.idx = torch.tensor(np.random.choice(1536, 256, replace=False)).to(
+            self.device
+        )
+
+    def extract(self, image_tensor):
+        """
+        image_tensor: (1, 3, 224, 224)
+        Returns concatenated feature map resized to (1, C, 28, 28)
+        """
         with torch.no_grad():
-            self.model(img_t)
+            self.backbone(image_tensor.to(self.device))
 
-        # layer2: (1, 128, 28, 28), layer3: (1, 256, 14, 14)
-        feat2 = self.features[0] 
-        feat3 = self.features[1] 
+        f2 = self.layer2_out  # (1, 512, 28, 28)
+        f3 = self.layer3_out  # (1, 1024, 14, 14)
 
-        # Upsample feat3 to match feat2 (28x28)
-        feat3 = nn.functional.interpolate(feat3, size=feat2.shape[2:], mode='bilinear', align_corners=False)
+        # Resize layer3 to match layer2 spatial dims
+        f3_up = F.interpolate(
+            f3, size=f2.shape[-2:], mode="bilinear", align_corners=False
+        )
 
-        # Concatenate: (1, 128+256=384, 28, 28)
-        concatenated = torch.cat([feat2, feat3], dim=1) 
-        return concatenated.squeeze(0).numpy() # (384, 28, 28)
+        # Concatenate along channel dim → (1, 1536, 28, 28)
+        combined = torch.cat([f2, f3_up], dim=1)
 
+        # Dimension reduction to 256 for rapid model computation
+        combined = torch.index_select(combined, 1, self.idx)
+        return combined.cpu()
+
+    def load_image(self, path):
+        img = Image.open(path).convert("RGB")
+        return TRANSFORM(img).unsqueeze(0)  # (1,3,224,224)
+
+
+_extractor_instance = None
+
+
+def get_extractor():
+    global _extractor_instance
+    if _extractor_instance is None:
+        _extractor_instance = FeatureExtractor()
+    return _extractor_instance

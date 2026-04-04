@@ -27,13 +27,13 @@ export const InspectionProvider = ({ children }) => {
   const runNewInspection = async (file, templateId) => {
     try {
       const result = await inspectionService.runInspection(file, templateId);
-      
+
       const newRecord = {
         ...result,
         id: `INS-${Math.floor(Math.random() * 9000) + 1000}`,
         timestamp: new Date().toISOString()
       };
-      
+
       setHistory(prev => [newRecord, ...prev]);
       setCurrentResult(newRecord);
       return newRecord;
@@ -53,8 +53,23 @@ export const InspectionProvider = ({ children }) => {
     setCurrentResult(newRecord);
   };
 
+  const updateInspection = (updatedRecord) => {
+    setHistory(prev => prev.map(item => item.id === updatedRecord.id ? updatedRecord : item));
+    if (currentResult?.id === updatedRecord.id) {
+      setCurrentResult(updatedRecord);
+    }
+  };
+
   return (
-    <InspectionContext.Provider value={{ history, currentResult, setCurrentResult, runNewInspection, addInspection, loading }}>
+    <InspectionContext.Provider value={{
+      history,
+      currentResult,
+      setCurrentResult,
+      runNewInspection,
+      addInspection,
+      updateInspection,
+      loading
+    }}>
       {children}
     </InspectionContext.Provider>
   );

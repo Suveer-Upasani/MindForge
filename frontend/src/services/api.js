@@ -1,4 +1,4 @@
-const API_BASE_URL = `http://${window.location.hostname}:5000`;
+const API_BASE_URL = "http://localhost:5000";
 
 export const api = {
   // Placeholder for any categories if needed by frontend
@@ -65,21 +65,18 @@ export const api = {
     }
   },
 
-  async getReport(productId, productCategory, anomalyScore, heatmapBase64) {
+  async overrideStatus(inspectionId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/products/${productId}/report`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product_category: productCategory,
-          anomaly_score: anomalyScore,
-          heatmap_base64: heatmapBase64
-        })
+      const response = await fetch(`${API_BASE_URL}/api/inspections/${inspectionId}/pass-override`, {
+        method: 'POST'
       });
-      if (!response.ok) throw new Error('Failed to generate report');
-      return await response.json(); // { defect_type, location, cause_explanation, suggested_fix }
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to override status');
+      }
+      return await response.json();
     } catch (error) {
-      console.error('Report Error:', error);
+      console.error('Override Error:', error);
       throw error;
     }
   }

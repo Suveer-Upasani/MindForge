@@ -1,81 +1,82 @@
-import os
-import pickle
+import torch
 import numpy as np
+import pickle
 import cv2
-import base64
-from PIL import Image
-from scipy.spatial.distance import mahalanobis
-from .feature_extractor import FeatureExtractor
+from scipy.ndimage import gaussian_filter
+from .feature_extractor import get_extractor
 
-def inspect_image(product_id: str, image_path: str):
+
+def run_inference(image_path, model_path):
     """
-    Extract features from input image, compute Mahalanobis distance per patch,
-    normalize anomaly score, and generate base64 heatmap.
+    Returns:
+      heatmap_bgr: np.array (H, W, 3) — colored heatmap
+      score: float — anomaly score (0-100)
+      status: "PASS" or "FAIL"
+      overlay: np.array — heatmap blended on original image
     """
-    model_path = os.path.join('models', f'{product_id}.pkl')
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model for product {product_id} not found.")
-        
-    with open(model_path, 'rb') as f:
+    # Load model
+    with open(model_path, "rb") as f:
         model_data = pickle.load(f)
-        
-    mean = model_data['mean'] # (C, H*W)
-    cov = model_data['cov']   # (C, C, H*W)
-    H, W = model_data['grid_shape']
-    C = mean.shape[0]
-    
-    extractor = FeatureExtractor()
-    img = Image.open(image_path).convert('RGB')
-    feat = extractor.extract(img) # (C, H, W)
-    feat_flat = feat.reshape(C, H * W) # (C, H*W)
-    
-    distances = np.zeros(H * W)
-    
-    # Compute Mahalanobis distance per patch
-    for i in range(H * W):
-        x = feat_flat[:, i]
-        mu = mean[:, i]
-        sigma = cov[:, :, i]
-        
-        # safely invert preventing overflow or strict singular errors
-        try:
-            inv_sigma = np.linalg.inv(sigma)
-        except np.linalg.LinAlgError:
-            inv_sigma = np.linalg.pinv(sigma)
-            
-        # mahalanobis function expects 1D arrays
-        distances[i] = float(mahalanobis(x, mu, inv_sigma))
-        
-    distances = np.nan_to_num(distances)
-        
-    # Reshape to spatial map
-    score_map = distances.reshape(H, W)
-    
-    # Normalize score to 0-1 range (simplified: using typical range values or max distance)
-    # A robust implementation would use calibration max validation distance.
-    max_d = score_map.max()
-    min_d = score_map.min()
-    if max_d == min_d:
-        normalized_map = np.zeros_like(score_map)
+
+    mean = torch.tensor(model_data["mean"])  # (C, H*W)
+    cov_inv = torch.tensor(model_data["cov_inv"])  # (H*W, C, C)
+    threshold = model_data["threshold"]
+    H, W = model_data["spatial_size"]
+
+    # Extract features from test image
+    extractor = get_extractor()
+    img_tensor = extractor.load_image(image_path)
+    features = extractor.extract(img_tensor)  # (1, C, H, W)
+    features = features.squeeze(0)  # (C, H, W)
+    C = features.shape[0]
+
+    # Reshape → (H*W, C)
+    diff = (features.reshape(C, H * W) - mean).T  # (H*W, C)
+
+    # Mahalanobis distance per pixel
+    dist_map = (
+        torch.sqrt(
+            torch.clamp(torch.einsum("bi,bij,bj->b", diff, cov_inv, diff), min=0)
+        )
+        .reshape(H, W)
+        .numpy()
+    )  # (H, W)
+
+    # Smooth the raw distance map
+    dist_map = gaussian_filter(dist_map, sigma=2)
+
+    # Upsample to 224x224
+    score_map = cv2.resize(dist_map, (224, 224), interpolation=cv2.INTER_LINEAR)
+
+    # Per-image normalization
+    s_min, s_max = score_map.min(), score_map.max()
+    if s_max - s_min > 1e-6:
+        score_norm = (score_map - s_min) / (s_max - s_min)
     else:
-        normalized_map = (score_map - min_d) / (max_d - min_d)
-        
-    anomaly_score = float(score_map.max())
-    # simplistic arbitrary threshold
-    is_pass = anomaly_score < 25.0 
-    
-    # Heatmap visualization
-    heatmap = (normalized_map * 255).astype(np.uint8)
-    heatmap_resized = cv2.resize(heatmap, (224, 224), interpolation=cv2.INTER_CUBIC)
-    # Apply colormap
-    colormap_img = cv2.applyColorMap(heatmap_resized, cv2.COLORMAP_JET)
-    
-    # Encode to base64
-    _, buffer = cv2.imencode('.png', colormap_img)
-    heatmap_base64 = base64.b64encode(buffer).decode('utf-8')
-    
+        score_norm = np.zeros_like(score_map)
+
+    # Anomaly score = max of normalized map (0-100)
+    anomaly_score = float(score_norm.max() * 100)
+
+    # PASS/FAIL using calibrated threshold
+    # Normalize threshold to same scale
+    thresh_norm = (threshold - s_min) / (s_max - s_min + 1e-6)
+    status = "FAIL" if score_norm.max() > thresh_norm else "PASS"
+
+    # Generate heatmap
+    heatmap_bgr = cv2.applyColorMap(
+        (score_norm * 255).astype(np.uint8), cv2.COLORMAP_JET
+    )
+
+    # Load original image and blend
+    original = cv2.imread(image_path)
+    original = cv2.resize(original, (224, 224))
+    overlay = cv2.addWeighted(original, 0.5, heatmap_bgr, 0.5, 0)
+
     return {
-        "anomaly_score": anomaly_score,
-        "pass": is_pass,
-        "heatmap_base64": heatmap_base64
+        "heatmap": heatmap_bgr,
+        "overlay": overlay,
+        "score": round(anomaly_score, 2),
+        "status": status,
+        "threshold": round(threshold, 4),
     }

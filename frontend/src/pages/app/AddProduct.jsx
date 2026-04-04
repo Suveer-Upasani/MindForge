@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTemplates } from '../../context/TemplateContext';
 import { Card } from '../../components/ui/Card';
@@ -22,6 +22,10 @@ export default function AddProduct() {
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [calibrationComplete, setCalibrationComplete] = useState(false);
   const [error, setError] = useState(null);
+  
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('Extracting features and fitting anomaly model natively...');
+  const [calibratingProductId, setCalibratingProductId] = useState(null);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -29,19 +33,44 @@ export default function AddProduct() {
     setImages(prev => [...prev, ...newImages].slice(0, 20));
   };
 
+  useEffect(() => {
+    let intervalId;
+    if (isCalibrating && calibratingProductId) {
+      intervalId = setInterval(async () => {
+        try {
+          const res = await fetch(`http://${window.location.hostname}:5000/api/products/${calibratingProductId}/calibration-status`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.progress !== undefined) setProgress(data.progress);
+            if (data.message !== undefined) setProgressMessage(data.message);
+          }
+        } catch (e) {
+          console.error("Failed to fetch progress", e);
+        }
+      }, 500);
+    }
+    return () => clearInterval(intervalId);
+  }, [isCalibrating, calibratingProductId]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || images.length === 0) return;
     
     setIsCalibrating(true);
+    setProgress(0);
+    setProgressMessage('Starting calibration protocol...');
     setError(null);
     
+    const productId = formData.name.toLowerCase().replace(/\s+/g, '-');
+    setCalibratingProductId(productId);
+    
     try {
-      const productId = formData.name.toLowerCase().replace(/\s+/g, '-');
       const files = images.map(img => img.file);
       
       await api.calibrate(productId, files);
       
+      setProgress(100);
+      setProgressMessage('Calibration complete!');
       setIsCalibrating(false);
       setCalibrationComplete(true);
       
@@ -63,11 +92,16 @@ export default function AddProduct() {
 
   if (isCalibrating) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 max-w-md mx-auto">
         <Loader />
         <h2 className="text-2xl font-bold text-gray-900">Calibration Engine Running</h2>
-        <p className="text-gray-500 max-w-md text-center">
-          Extracting features and fitting anomaly model natively...
+        
+        <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+        </div>
+        
+        <p className="text-gray-500 text-center font-medium">
+          {progressMessage}
         </p>
       </div>
     );
@@ -96,7 +130,7 @@ export default function AddProduct() {
       </div>
 
       {error && <div className="p-4 bg-red-50 text-red-600 border border-red-200 rounded-md">{error}</div>}
-
+      
       <form onSubmit={handleSubmit} className="space-y-8">
         <Card className="bg-white border text-gray-900 border-gray-200 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -125,7 +159,7 @@ export default function AddProduct() {
                 <div className="mt-6 flex flex-wrap gap-4">
                    {images.map((img, idx) => (
                      <div key={idx} className="w-16 h-16 rounded overflow-hidden shadow-sm border border-gray-200">
-                       <img src={img.src} alt="Uploaded preview" className="w-full h-full object-cover" />
+                        <img src={img.src} alt="Uploaded preview" className="w-full h-full object-cover" />
                      </div>
                    ))}
                 </div>

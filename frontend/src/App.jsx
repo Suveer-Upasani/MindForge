@@ -15,9 +15,12 @@ import Billing from './pages/app/Billing';
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 
+import { Loader } from './components/ui/Loader';
+
 // Simple Protected Route wrapper
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthLoading } = useAuth();
+  if (isAuthLoading) return <div className="h-screen flex items-center justify-center"><Loader /></div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 };
