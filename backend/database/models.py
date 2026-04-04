@@ -14,7 +14,7 @@ class Company(Base):
     product_types = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    payments = relationship("PaymentHistory", back_populates="company")
+    payments = relationship("PaymentHistory", foreign_keys="[PaymentHistory.company_id]", back_populates="company")
 
 class Product(Base):
     __tablename__ = "products"
@@ -95,4 +95,4 @@ class PaymentHistory(Base):
     transaction_id = Column(String, unique=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    company = relationship("Company", back_populates="payments")
+    company = relationship("Company", foreign_keys=[company_id], back_populates="payments")

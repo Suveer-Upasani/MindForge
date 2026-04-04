@@ -1,5 +1,13 @@
 [
     {
+        "id": "tpl_1775280986",
+        "name": "A",
+        "category": "Ceramic",
+        "status": "draft",
+        "referenceImageCount": 0,
+        "updatedAt": "2026-04-04T11:06:26.161887"
+    },
+    {
         "id": "tpl_1775277815",
         "name": "abc",
         "category": "Metal",

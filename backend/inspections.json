@@ -1,5 +1,104 @@
 [
     {
+        "id": "INS-5862",
+        "templateName": "a",
+        "category": "Detection",
+        "timestamp": "2026-04-04T12:02:01.338136",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-2784",
+        "templateName": "a",
+        "category": "Detection",
+        "timestamp": "2026-04-04T11:59:37.185191",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-3998",
+        "templateName": "a",
+        "category": "Detection",
+        "timestamp": "2026-04-04T11:55:52.069513",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-5885",
+        "templateName": "a",
+        "category": "Detection",
+        "timestamp": "2026-04-04T11:50:52.925477",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-6386",
+        "templateName": "a",
+        "category": "Detection",
+        "timestamp": "2026-04-04T11:50:08.705968",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-3722",
+        "templateName": "a",
+        "category": "Detection",
+        "timestamp": "2026-04-04T11:37:00.260613",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-6896",
+        "templateName": "a",
+        "category": "Detection",
+        "timestamp": "2026-04-04T11:36:29.153875",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-1110",
+        "templateName": "a",
+        "category": "Detection",
+        "timestamp": "2026-04-04T11:35:06.112574",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-9312",
+        "templateName": "a",
+        "category": "Detection",
+        "timestamp": "2026-04-04T11:06:41.160108",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
         "id": "INS-7726",
         "templateName": "abc",
         "category": "Detection",

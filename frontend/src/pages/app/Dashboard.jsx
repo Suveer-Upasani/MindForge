@@ -42,7 +42,7 @@ export default function Dashboard() {
   const [pieData, setPieData] = useState([]);
 
   useEffect(() => {
-    fetch(`http://${window.location.hostname}:5000/api/stats/passfail`)
+    fetch(`http://${window.location.hostname}:5005/api/stats/passfail`)
       .then(res => res.json())
       .then(data => {
         setPieData([

@@ -157,12 +157,20 @@ export default function Inspection() {
                      onCapture={async (file, onResult) => {
                         setIsInspecting(true);
                         try {
-                           const result = await runNewInspection(file, selectedTemplateId);
+                           const result = await runNewInspection(file, selectedProductId);
                            onResult(result);
                         } catch (err) {
                            console.error("Frame evaluation failed:", err);
                         } finally {
                            setIsInspecting(false);
+                        }
+                     }}
+                     onLiveFrame={async (file, onResult) => {
+                        try {
+                           const result = await api.inspect(selectedProductId, file, true);
+                           onResult(result);
+                        } catch (err) {
+                           console.error("Live frame evaluation failed:", err);
                         }
                      }}
                   />

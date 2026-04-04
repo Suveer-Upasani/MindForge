@@ -1,4 +1,4 @@
-const API_BASE_URL = `http://${window.location.hostname}:5000`;
+const API_BASE_URL = `http://${window.location.hostname}:5005`;
 
 export const billingService = {
   /**

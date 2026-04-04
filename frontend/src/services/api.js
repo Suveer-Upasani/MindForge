@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "http://localhost:5005";
 
 export const api = {
   // Placeholder for any categories if needed by frontend
@@ -45,9 +45,12 @@ export const api = {
     }
   },
 
-  async inspect(productId, file) {
+  async inspect(productId, file, isLive = false) {
     const formData = new FormData();
     formData.append('file', file);
+    if (isLive) {
+      formData.append('live', 'true');
+    }
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/products/${productId}/inspect`, {

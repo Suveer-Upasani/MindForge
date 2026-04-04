@@ -106,7 +106,7 @@ export default function Results() {
                   <div className="aspect-video relative group bg-gray-100">
                      {currentResult.serverRef ? (
                         <img
-                           src={currentResult.serverRef.startsWith('data:image') || currentResult.serverRef.startsWith('http') ? currentResult.serverRef : `http://localhost:5000/uploads/${currentResult.serverRef}`}
+                           src={currentResult.serverRef.startsWith('data:image') || currentResult.serverRef.startsWith('http') ? currentResult.serverRef : `http://localhost:5005/uploads/${currentResult.serverRef}`}
                            alt="Sample Analysis"
                            className="w-full h-full object-contain p-4 transition-transform duration-700"
                         />

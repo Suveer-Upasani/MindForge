@@ -3,9 +3,11 @@ import json
 import uuid
 from datetime import datetime
 import jwt
-from database.db import get_db
+from database.db import get_db, engine
 from sqlalchemy.orm import Session
-from database import crud, schemas
+from database import crud, schemas, models
+
+models.Base.metadata.create_all(bind=engine)
 from flask import Flask, request, redirect, url_for, render_template, flash, jsonify
 from flask_cors import CORS
 from ai.calibrate import calibrate
@@ -256,6 +258,7 @@ def get_product_stats(product_id):
 
 @app.route("/api/products/<product_id>/inspect", methods=["POST"])
 def inspect_api(product_id):
+    is_live = request.form.get("live", "false").lower() == "true"
     if "file" not in request.files:
         return jsonify({"status": "error", "message": "No image provided"}), 400
 
@@ -289,59 +292,70 @@ def inspect_api(product_id):
             "heatmap_url": f"/static/heatmaps/{inspection_id}.jpg",
         }
 
-        # Update stats
-        stats = get_stats()
-        if product_id not in stats:
-            stats[product_id] = {
-                "total_scanned": 0,
-                "total_approved": 0,
-                "total_defective": 0,
+        if not is_live:
+            # Update stats
+            stats = get_stats()
+            if product_id not in stats:
+                stats[product_id] = {
+                    "total_scanned": 0,
+                    "total_approved": 0,
+                    "total_defective": 0,
+                }
+
+            stats[product_id]["total_scanned"] += 1
+            if result.get("pass", False):
+                stats[product_id]["total_approved"] += 1
+            else:
+                stats[product_id]["total_defective"] += 1
+
+            save_stats(stats)
+
+            # --- start DB history logging ---
+            templates = load_json(TEMPLATES_FILE)
+            model_info = next((t for t in templates if t["id"] == product_id), {})
+            model_accuracy = model_info.get("accuracy", 98.4)
+
+            inspections = load_json(INSPECTIONS_FILE)
+            new_entry = {
+                "id": inspection_id,
+                "templateName": product_id,
+                "category": "Detection",
+                "timestamp": datetime.now().isoformat(),
+                "status": "pass" if result.get("pass", False) else "fail",
+                "anomalyScore": round(float(result.get("anomaly_score", 0)), 2),
+                "severity": "High" if not result.get("pass", False) else "Low",
+                "modelAccuracy": model_accuracy,
+                "likelyIssue": "Surface Discontinuity / Material Anomaly"
+                if not result.get("pass", False)
+                else "Consistent Surface",
             }
+            inspections.insert(0, new_entry)
+            save_json(INSPECTIONS_FILE, inspections)
 
-        stats[product_id]["total_scanned"] += 1
-        if result.get("pass", False):
-            stats[product_id]["total_approved"] += 1
+            result.update(
+                {
+                    "id": new_entry["id"],
+                    "templateName": model_info.get("name", product_id),
+                    "category": model_info.get("category", "Detection"),
+                    "modelAccuracy": model_accuracy,
+                    "likelyIssue": new_entry["likelyIssue"],
+                    "severity": new_entry["severity"],
+                }
+            )
+            # --- end DB history logging ---
         else:
-            stats[product_id]["total_defective"] += 1
-
-        save_stats(stats)
-
-        # --- start DB history logging ---
-        templates = load_json(TEMPLATES_FILE)
-        model_info = next((t for t in templates if t["id"] == product_id), {})
-        model_accuracy = model_info.get("accuracy", 98.4)
-
-        inspections = load_json(INSPECTIONS_FILE)
-        new_entry = {
-            "id": inspection_id,
-            "templateName": product_id,
-            "category": "Detection",
-            "timestamp": datetime.now().isoformat(),
-            "status": "pass" if result.get("pass", False) else "fail",
-            "anomalyScore": round(float(result.get("anomaly_score", 0)), 2),
-            "severity": "High" if not result.get("pass", False) else "Low",
-            "modelAccuracy": model_accuracy,
-            "likelyIssue": "Surface Discontinuity / Material Anomaly"
-            if not result.get("pass", False)
-            else "Consistent Surface",
-        }
-        inspections.insert(0, new_entry)
-        save_json(INSPECTIONS_FILE, inspections)
+            result.update(
+                {
+                    "id": inspection_id,
+                    "status": "pass" if result.get("pass", False) else "fail",
+                    "severity": "High" if not result.get("pass", False) else "Low",
+                    "likelyIssue": "Surface Discontinuity" if not result.get("pass", False) else "None",
+                    "anomalyScore": round(float(result.get("anomaly_score", 0)), 2),
+                }
+            )
 
         if os.path.exists(temp_path):
             os.remove(temp_path)
-
-        result.update(
-            {
-                "id": new_entry["id"],
-                "templateName": model_info.get("name", product_id),
-                "category": model_info.get("category", "Detection"),
-                "modelAccuracy": model_accuracy,
-                "likelyIssue": new_entry["likelyIssue"],
-                "severity": new_entry["severity"],
-            }
-        )
-        # --- end DB history logging ---
 
         return jsonify(result)
     except Exception as e:
@@ -392,7 +406,6 @@ def auth_signup():
     company = crud.get_company_by_email(db, data["email"])
     if company:
         return jsonify({"error": "User already exists"}), 400
-    from .database import schemas
 
     company_data = schemas.CompanyCreate(
         name=data.get("name", "New User"),
@@ -411,25 +424,15 @@ def auth_signup():
 @app.route("/api/auth/login", methods=["POST"])
 def auth_login():
     data = request.json
-    users = load_json(USERS_FILE)
-    user = next(
-        (
-            u
-            for u in users
-            if u.get("email") == data.get("email")
-            and u.get("password") == data.get("password")
-        ),
-        None,
-    )
-    if not user:
+    db = next(get_db())
+    user = crud.get_company_by_email(db, data.get("email"))
+    if not user or not crud.verify_password(data.get("password"), user.hashed_password):
         return jsonify({"error": "Invalid credentials"}), 401
 
     token = jwt.encode(
-        {"user_id": user["id"]}, app.config["JWT_SECRET"], algorithm="HS256"
+        {"user_id": user.id}, app.config["JWT_SECRET"], algorithm="HS256"
     )
-    user_copy = dict(user)
-    user_copy["token"] = token
-    return jsonify(user_copy)
+    return jsonify({"id": user.id, "email": user.email, "name": user.name, "token": token})
 
 
 @app.route("/api/auth/me", methods=["GET"])
@@ -439,11 +442,11 @@ def auth_me():
         return jsonify({"error": "No token"}), 401
     try:
         data = jwt.decode(token, app.config["JWT_SECRET"], algorithms=["HS256"])
-        users = load_json(USERS_FILE)
-        user = next((u for u in users if u["id"] == data["user_id"]), None)
+        db = next(get_db())
+        user = db.query(models.Company).filter(models.Company.id == data["user_id"]).first()
         if not user:
             return jsonify({"error": "User not found"}), 401
-        return jsonify(user)
+        return jsonify({"id": user.id, "email": user.email, "name": user.name})
     except Exception as e:
         return jsonify({"error": str(e)}), 401
 
@@ -530,4 +533,4 @@ def save_transaction_api():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True, port=5000)
+    app.run(host="0.0.0.0", debug=True, port=5005)

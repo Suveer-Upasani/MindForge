@@ -38,7 +38,7 @@ export default function AddProduct() {
     if (isCalibrating && calibratingProductId) {
       intervalId = setInterval(async () => {
         try {
-          const res = await fetch(`http://${window.location.hostname}:5000/api/products/${calibratingProductId}/calibration-status`);
+          const res = await fetch(`http://${window.location.hostname}:5005/api/products/${calibratingProductId}/calibration-status`);
           if (res.ok) {
             const data = await res.json();
             if (data.progress !== undefined) setProgress(data.progress);
