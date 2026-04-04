@@ -7,21 +7,27 @@ env/
 .env
 .venv/
 
-# Data & Output
-backend/models/*.pkl
-backend/uploads/*
-!backend/uploads/.gitkeep
-backend/data/*.json
-!backend/data/.gitkeep
-
 # Node
 frontend/node_modules/
 frontend/dist/
 frontend/build/
 .npm/
 
+# Backend Data & Heatmaps
+backend/static/heatmaps/
+backend/*.json
+backend/uploads/
+backend/models/
+backend/data/*.json
+!backend/data/.gitkeep
+
 # OS
 .DS_Store
 Thumbs.db
 *.log
 .vscode/
+.env
+.flaskenv
+venv/
+.venv/
+
