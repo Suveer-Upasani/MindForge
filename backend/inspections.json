@@ -1,5 +1,27 @@
 [
     {
+        "id": "INS-4520",
+        "templateName": "pen",
+        "category": "Detection",
+        "timestamp": "2026-04-04T01:46:14.632837",
+        "status": "pass",
+        "anomalyScore": 3.28342942631416,
+        "severity": "Low",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Consistent Surface"
+    },
+    {
+        "id": "INS-1909",
+        "templateName": "apple",
+        "category": "Detection",
+        "timestamp": "2026-04-04T00:42:07.063638",
+        "status": "fail",
+        "anomalyScore": 49.83423096557422,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
         "id": "INS-2996",
         "templateName": "yo",
         "category": "Detection",

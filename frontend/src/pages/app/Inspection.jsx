@@ -6,22 +6,14 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Loader } from '../../components/ui/Loader';
-<<<<<<< HEAD
-import { Camera, Monitor, Upload, Cpu, Zap, Info } from 'lucide-react';
+import { Camera, Monitor, Upload, Cpu, Zap, ArrowRight, Info } from 'lucide-react';
+import NeuralViewport from '../../components/app/NeuralViewport';
 import { api } from '../../services/api';
 
 export default function Inspection() {
   const navigate = useNavigate();
-  const { addInspection } = useInspection();
-=======
-import { Camera, Monitor, Upload, Cpu, Zap, ArrowRight, Info } from 'lucide-react';
-import NeuralViewport from '../../components/app/NeuralViewport';
-
-export default function Inspection() {
-  const navigate = useNavigate();
   const { templates } = useTemplates();
-  const { runNewInspection, setCurrentResult } = useInspection();
->>>>>>> origin/khushi
+  const { runNewInspection, setCurrentResult, addInspection } = useInspection();
 
   const [products, setProducts] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -167,11 +159,8 @@ export default function Inspection() {
               </div>
            </Card>
 
-<<<<<<< HEAD
            {error && <div className="p-4 bg-red-50 text-red-600 border border-red-200 rounded-md">{error}</div>}
 
-           {!image ? (
-=======
            {isWebcamActive ? (
               <NeuralViewport 
                  onClose={() => setIsWebcamActive(false)}
@@ -189,7 +178,6 @@ export default function Inspection() {
                  }}
               />
            ) : !image ? (
->>>>>>> origin/khushi
               <Card padding={false} className="overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50">
                 <div 
                   onDragOver={(e) => e.preventDefault()}
