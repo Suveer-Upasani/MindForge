@@ -36,51 +36,67 @@ export default function Billing() {
     fetchData();
   }, []);
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async () => {
     if (!window.Razorpay) {
       alert("Razorpay SDK not loaded. Please refresh the page.");
       return;
     }
 
-    const options = {
-      key: KEY_ID,
-      amount: 500000, // 5000 * 100 paise
-      currency: "INR",
-      name: "MindForge Premium",
-      description: "Pro CV Model Subscription",
-      image: "/logo.png", // Replace with your actual logo path
-      handler: async function (response) {
-        setLoading(true);
-        try {
-          await billingService.saveTransaction({
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_signature: response.razorpay_signature,
-            plan: 'premium',
-            amount: 5000,
-            currency: 'INR'
-          });
-          setCurrentPlan('premium');
-          const hist = await billingService.getBillingHistory();
-          setHistory(hist);
-          setShowSuccess(true);
-        } catch (error) {
-          console.error("Transaction save error", error);
-          alert("Payment was successful but we failed to update our records. Please contact support.");
-        } finally {
-          setLoading(false);
+    setLoading(true);
+    try {
+      // 1. Create order on backend
+      const order = await billingService.createOrder(5000);
+      
+      const options = {
+        key: KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: "MindForge Premium",
+        description: "Pro CV Model Subscription",
+        image: "/logo.png",
+        order_id: order.id, // This is the crucial part
+        handler: async function (response) {
+          setLoading(true);
+          try {
+            await billingService.saveTransaction({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              plan: 'premium',
+              amount: 5000,
+              currency: 'INR'
+            });
+            setCurrentPlan('premium');
+            const hist = await billingService.getBillingHistory();
+            setHistory(hist);
+            setShowSuccess(true);
+          } catch (error) {
+            console.error("Transaction save error", error);
+            alert("Payment was successful but we failed to update our records. Please contact support.");
+          } finally {
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: user?.name || "MindForge User",
+          email: user?.email || "",
+          contact: "",
+        },
+        theme: { color: "#2563eb" },
+        modal: {
+          ondismiss: function() {
+            setLoading(false);
+          }
         }
-      },
-      prefill: {
-        name: user?.name || "MindForge User",
-        email: user?.email || "",
-        contact: "",
-      },
-      theme: { color: "#2563eb" },
-    };
+      };
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error("Order creation failed", err);
+      alert("Failed to initiate payment. Please try again later.");
+      setLoading(false);
+    }
   };
 
   if (loading) return <div className="h-full flex items-center justify-center"><Loader /></div>;

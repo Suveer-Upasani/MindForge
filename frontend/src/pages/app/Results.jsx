@@ -19,6 +19,7 @@ export default function Results() {
    const { currentResult, updateInspection } = useInspection();
    const [stats, setStats] = useState({ total_scanned: 0, total_approved: 0, total_defective: 0 });
    const [isOverriding, setIsOverriding] = useState(false);
+   const [isDownloading, setIsDownloading] = useState(false);
 
    useEffect(() => {
       if (currentResult && currentResult.templateId) {
@@ -53,6 +54,19 @@ export default function Results() {
       }
    };
 
+   const handleDownloadReport = async () => {
+      if (!currentResult || !currentResult.id) return;
+      setIsDownloading(true);
+      try {
+         await api.downloadReport(currentResult.id);
+      } catch (err) {
+         console.error('Failed to download report:', err);
+         alert('Failed to download report: ' + err.message);
+      } finally {
+         setIsDownloading(false);
+      }
+   };
+
    if (!currentResult) {
       return (
          <div className="h-[60vh] flex flex-col items-center justify-center text-center space-y-6">
@@ -81,7 +95,12 @@ export default function Results() {
                </p>
             </div>
             <div className="flex gap-3">
-               <Button variant="secondary" className="font-semibold bg-white border-gray-300 text-gray-700 hover:bg-gray-50">
+               <Button 
+                  variant="secondary" 
+                  className="font-semibold bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                  onClick={handleDownloadReport}
+                  loading={isDownloading}
+               >
                   <Download size={16} className="mr-2" />
                   Download Full Report (PDF)
                </Button>

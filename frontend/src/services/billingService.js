@@ -44,5 +44,27 @@ export const billingService = {
       console.error('Save Transaction API Error:', error);
       throw error;
     }
+  },
+
+  /**
+   * Creates a new Razorpay order on the backend.
+   * @param {number} amount - Amount in INR (not paise)
+   */
+  async createOrder(amount = 5000) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/billing/create-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('mindforge_token')}`
+        },
+        body: JSON.stringify({ amount, currency: 'INR' }),
+      });
+      if (!response.ok) throw new Error('Failed to create Razorpay order');
+      return await response.json();
+    } catch (error) {
+      console.error('Create Order API Error:', error);
+      throw error;
+    }
   }
 };

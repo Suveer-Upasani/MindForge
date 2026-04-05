@@ -82,5 +82,24 @@ export const api = {
       console.error('Override Error:', error);
       throw error;
     }
+  },
+
+  async downloadReport(inspectionId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/inspections/${inspectionId}/report`);
+      if (!response.ok) throw new Error('Failed to download report');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Report_${inspectionId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Download Report Error:', error);
+      throw error;
+    }
   }
 };

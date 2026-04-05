@@ -1,5 +1,60 @@
 [
     {
+        "id": "INS-2278",
+        "templateName": "tiles",
+        "category": "Detection",
+        "timestamp": "2026-04-05T16:37:41.902592",
+        "status": "pass",
+        "anomalyScore": 100.0,
+        "severity": "Low",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Consistent Surface"
+    },
+    {
+        "id": "INS-2572",
+        "templateName": "tiles",
+        "category": "Detection",
+        "timestamp": "2026-04-05T16:25:32.325760",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
+        "id": "INS-1141",
+        "templateName": "tiles",
+        "category": "Detection",
+        "timestamp": "2026-04-05T16:25:03.805855",
+        "status": "pass",
+        "anomalyScore": 100.0,
+        "severity": "Low",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Consistent Surface"
+    },
+    {
+        "id": "INS-8491",
+        "templateName": "tiles",
+        "category": "Detection",
+        "timestamp": "2026-04-05T15:52:54.327437",
+        "status": "pass",
+        "anomalyScore": 100.0,
+        "severity": "Low",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Consistent Surface"
+    },
+    {
+        "id": "INS-3416",
+        "templateName": "tiles",
+        "category": "Detection",
+        "timestamp": "2026-04-05T15:52:11.582371",
+        "status": "fail",
+        "anomalyScore": 100.0,
+        "severity": "High",
+        "modelAccuracy": 98.4,
+        "likelyIssue": "Surface Discontinuity / Material Anomaly"
+    },
+    {
         "id": "INS-5862",
         "templateName": "a",
         "category": "Detection",

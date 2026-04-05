@@ -8,10 +8,15 @@ from sqlalchemy.orm import Session
 from database import crud, schemas, models
 
 models.Base.metadata.create_all(bind=engine)
-from flask import Flask, request, redirect, url_for, render_template, flash, jsonify
+from flask import Flask, request, redirect, url_for, render_template, flash, jsonify, send_file
+from fpdf import FPDF
 from flask_cors import CORS
 from ai.calibrate import calibrate
 from ai.inference import run_inference
+from dotenv import load_dotenv
+import razorpay
+
+load_dotenv()
 
 UPLOAD_FOLDER = "uploads"
 DATA_FOLDER = "data"
@@ -26,6 +31,10 @@ app.config["JWT_SECRET"] = "your-secret-key"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DATA_FOLDER, exist_ok=True)
+
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 
 @app.route("/favicon.ico")
@@ -505,6 +514,33 @@ def billing_history_api():
     return jsonify(user_history)
 
 
+@app.route("/api/billing/create-order", methods=["POST"])
+def create_order_api():
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    if not token:
+        return jsonify({"error": "No token"}), 401
+    try:
+        jwt.decode(token, app.config["JWT_SECRET"], algorithms=["HS256"])
+    except:
+        return jsonify({"error": "Invalid token"}), 401
+
+    data = request.json
+    amount = data.get("amount", 5000) * 100  # Convert to paise
+    currency = data.get("currency", "INR")
+
+    order_params = {
+        'amount': amount,
+        'currency': currency,
+        'payment_capture': 1
+    }
+
+    try:
+        order = razorpay_client.order.create(data=order_params)
+        return jsonify(order)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/billing/transaction", methods=["POST"])
 def save_transaction_api():
     token = request.headers.get("Authorization", "").replace("Bearer ", "")
@@ -520,6 +556,22 @@ def save_transaction_api():
     if not data:
         return jsonify({"status": "error", "message": "No data provided"}), 400
 
+    # Signature verification
+    razorpay_payment_id = data.get("razorpay_payment_id")
+    razorpay_order_id = data.get("razorpay_order_id")
+    razorpay_signature = data.get("razorpay_signature")
+
+    if razorpay_signature:
+        try:
+            params_dict = {
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': razorpay_signature
+            }
+            razorpay_client.utility.verify_payment_signature(params_dict)
+        except Exception as e:
+            return jsonify({"status": "error", "message": "Payment verification failed"}), 400
+
     data["user_id"] = user_id
     history = get_billing_history()
     data["date"] = datetime.now().isoformat()
@@ -530,6 +582,103 @@ def save_transaction_api():
         json.dump(history, f, indent=4)
 
     return jsonify({"status": "success", "transaction": data})
+
+
+@app.route("/api/inspections/<inspection_id>/report", methods=["GET"])
+def download_report(inspection_id):
+    inspections = load_json(INSPECTIONS_FILE)
+    inspection = next((i for i in inspections if i["id"] == inspection_id), None)
+
+    if not inspection:
+        return jsonify({"error": "Inspection not found"}), 404
+
+    # Generate PDF
+    pdf = FPDF()
+    pdf.add_page()
+
+    # Title
+    pdf.set_font("Helvetica", "B", 24)
+    pdf.set_text_color(37, 99, 235)  # Blue color
+    pdf.cell(0, 20, "MindForge Inspection Report", ln=True, align="C")
+    pdf.ln(10)
+
+    # Metadata
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(50, 10, "Scan ID:", ln=0)
+    pdf.set_font("Helvetica", "", 12)
+    pdf.cell(0, 10, inspection["id"], ln=1)
+
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(50, 10, "Timestamp:", ln=0)
+    pdf.set_font("Helvetica", "", 12)
+    pdf.cell(0, 10, inspection["timestamp"], ln=1)
+
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(50, 10, "Product Name:", ln=0)
+    pdf.set_font("Helvetica", "", 12)
+    pdf.cell(0, 10, inspection["templateName"], ln=1)
+
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(50, 10, "Category:", ln=0)
+    pdf.set_font("Helvetica", "", 12)
+    pdf.cell(0, 10, inspection.get("category", "N/A"), ln=1)
+
+    pdf.ln(10)
+    pdf.set_draw_color(200, 200, 200)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(10)
+
+    # Result Section
+    status = inspection["status"].upper()
+    pdf.set_font("Helvetica", "B", 16)
+    if status == "PASS":
+        pdf.set_text_color(22, 163, 74)  # Green
+    else:
+        pdf.set_text_color(220, 38, 38)  # Red
+    pdf.cell(0, 10, f"RESULT: {status}", ln=True)
+
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Helvetica", "", 12)
+    pdf.ln(5)
+    pdf.cell(50, 10, "Anomaly Score:", ln=0)
+    pdf.cell(0, 10, f"{inspection['anomalyScore']}%", ln=1)
+
+    pdf.cell(50, 10, "Severity:", ln=0)
+    pdf.cell(0, 10, inspection["severity"], ln=1)
+
+    pdf.cell(50, 10, "Model Accuracy:", ln=0)
+    pdf.cell(0, 10, f"{inspection.get('modelAccuracy', 'N/A')}%", ln=1)
+
+    pdf.ln(5)
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(50, 10, "Likely Issue:", ln=0)
+    pdf.set_font("Helvetica", "I", 12)
+    pdf.cell(0, 10, inspection["likelyIssue"], ln=1)
+
+    # Heatmap Image
+    heatmap_path = os.path.join("static", "heatmaps", f"{inspection_id}.jpg")
+    if os.path.exists(heatmap_path):
+        pdf.ln(10)
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.cell(0, 10, "Inspection Visual Analysis (Heatmap):", ln=True)
+        pdf.ln(5)
+        # Resize image to fit page (width 180mm)
+        pdf.image(heatmap_path, x=15, w=180)
+
+    # Footer
+    pdf.set_y(-30)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 10, "Generated by MindForge AI Factory Inspection System", ln=True, align="C")
+
+    # Output to buffer
+    output_filename = f"report_{inspection_id}.pdf"
+    pdf_path = os.path.join("static", output_filename)
+    os.makedirs("static", exist_ok=True)
+    pdf.output(pdf_path)
+
+    return send_file(pdf_path, as_attachment=True)
 
 
 if __name__ == "__main__":

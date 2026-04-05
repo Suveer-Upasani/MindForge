@@ -13,6 +13,11 @@ backend/uploads/*
 !backend/uploads/.gitkeep
 backend/data/*.json
 !backend/data/.gitkeep
+backend/users.json
+backend/app.db
+backend/static/report_*.pdf
+backend/static/*.jpg
+backend/static/*.png
 
 # Node
 frontend/node_modules/
